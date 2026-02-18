@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option csharp_namespace = "email_constructor.Api";
+
+service EmailContentBlock {
+  rpc GetEmailContentBlock (GetEmailContentBlockRequest) returns (GetEmailContentBlockResponse);
+}
+
+message GetEmailContentBlockRequest {
+  string id = 1;
+}
+
+message GetEmailContentBlockResponse {
+  string id = 1;
+}

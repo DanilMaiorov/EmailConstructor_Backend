@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>email_constructor</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspNetCore.HealthChecks.MongoDb" Version="9.0.0" />
+        <PackageReference Include="Grpc.AspNetCore" Version="2.57.0"/>
+        <PackageReference Include="MongoDB.Bson" Version="3.6.0" />
+        <PackageReference Include="MongoDB.Driver" Version="3.6.0" />
+        <PackageReference Include="MongoDB.Driver.Core" Version="2.30.0" />
+        <PackageReference Include="OpenTelemetry.Api" Version="1.15.0" />
+        <PackageReference Include="Parlem.HealthChecks.MongoDb" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Api\" />
+      <Folder Include="Application\" />
+      <Folder Include="Domain\" />
+      <Folder Include="Infrastructure\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Protobuf Include="Api\Protos\EmailContentBlock.proto">
+        <Generator>MSBuild:Compile</Generator>
+      </Protobuf>
+    </ItemGroup>
+
+</Project>

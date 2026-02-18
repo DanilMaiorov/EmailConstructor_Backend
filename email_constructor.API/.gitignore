@@ -1,0 +1,41 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+.vscode/
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Rider
+.idea/
+
+# NuGet
+packages/
+*.nupkg
+*.nuspec
+nuget.exe
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# MSBuild
+*.msbuild.log
+*.msbuild.binlog
+
+# Coverage reports
+coverage/
+*.coverage
+*.coveragexml
+
+# Other
+*.log
+*.tmp
+*.temp
+Thumbs.db
