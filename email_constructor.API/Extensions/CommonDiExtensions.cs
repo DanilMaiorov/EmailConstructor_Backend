@@ -21,6 +21,13 @@ public static class CommonDiExtensions
 
         return services;
     }
+    
+    public static IServiceCollection AddMapper(this IServiceCollection services)
+    {
+        services.AddScoped<IContentBlockService, ContentBlockService>();
+
+        return services;
+    }
 
     public static IServiceCollection AddDatabaseIndexes(this IServiceCollection services)
     {

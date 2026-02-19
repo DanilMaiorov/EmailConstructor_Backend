@@ -7,9 +7,17 @@ service EmailContentBlock {
 }
 
 message GetEmailContentBlockRequest {
-  string id = 1;
+  string languageId = 1;
+  string storeId = 2;
+  repeated Block blocks = 3;
+  bool isDefaultTemplate = 5;
 }
 
 message GetEmailContentBlockResponse {
-  string id = 1;
+  repeated Block blocks = 1;
+}
+
+message Block {
+  string type = 1;
+  map<string, string> payload = 2;
 }
