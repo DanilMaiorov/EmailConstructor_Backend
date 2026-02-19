@@ -21,7 +21,6 @@
       <Folder Include="Api\" />
       <Folder Include="Application\" />
       <Folder Include="Domain\" />
-      <Folder Include="Infrastructure\" />
     </ItemGroup>
 
     <ItemGroup>

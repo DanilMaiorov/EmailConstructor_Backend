@@ -6,8 +6,13 @@ namespace email_constructor.Common.Model;
 /// <summary>
 /// Базовая модель блока конструктора.
 /// </summary>
-public abstract class ContentBlock
+public class ContentBlock
 {
+    /// <summary>
+    /// Название коллекции.
+    /// </summary>
+    public static string Collection => nameof(ContentBlock);
+    
     /// <summary>
     /// Идентификатор блока.
     /// </summary>
@@ -32,10 +37,10 @@ public abstract class ContentBlock
     /// <summary>
     /// Верстка блока.
     /// </summary>
-    public string Html { get; set; }
+    public Dictionary<string, string> Payload { get; set; }
     
     /// <summary>
     /// Верстка блока.
     /// </summary>
-    public Dictionary<string, string> Payload { get; set; }
+    public List<Localization> Localizations { get; set; }
 }

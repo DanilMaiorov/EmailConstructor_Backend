@@ -2,5 +2,5 @@
 
 public interface IContentBlockRepository
 {
-    public void GetContentBlock();
+    public void GetContentBlock(string language, string storeId);
 }

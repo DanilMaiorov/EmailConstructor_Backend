@@ -15,7 +15,7 @@ public class ContentBlockService : IContentBlockService
     
     public Task<ContentBlock> GetBlockAsync(string id, string storeId)
     {
-        _contentBlockRepository.GetContentBlock();
+        _contentBlockRepository.GetContentBlock("default_btn", "ru");
         ;
         throw new NotImplementedException();
     }
