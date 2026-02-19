@@ -35,12 +35,12 @@ public class ContentBlock
     public string Type { get; set; }
     
     /// <summary>
-    /// Верстка блока.
+    /// Paylod блока.
     /// </summary>
     public Dictionary<string, string> Payload { get; set; }
     
     /// <summary>
-    /// Верстка блока.
+    /// Верстк блока.
     /// </summary>
     public List<Localization> Localizations { get; set; }
 }

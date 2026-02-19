@@ -1,6 +1,8 @@
-﻿namespace email_constructor.Infrastructure.Interfaces;
+﻿using email_constructor.Common.Model;
+
+namespace email_constructor.Infrastructure.Interfaces;
 
 public interface IContentBlockRepository
 {
-    public void GetContentBlock(string language, string storeId);
+    public Task<List<ContentBlock>> GetContentBlocks(string storeId, List<string> blockTypes);
 }

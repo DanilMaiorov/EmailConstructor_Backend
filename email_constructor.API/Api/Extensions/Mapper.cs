@@ -16,6 +16,7 @@ public class Mapper : IMapper
             LanguageId = request.LanguageId,
             StoreId = request.StoreId,
             Blocks = request.Blocks.Select(MapToBlockData).ToList(),
+            IsDefaultBlock = request.IsDefaultBlock
         };
 
     private static BlockData MapToBlockData(Block block) => 

@@ -1,4 +1,5 @@
-﻿using email_constructor.Application.Interfaces;
+﻿using email_constructor.Api.Extensions;
+using email_constructor.Application.Interfaces;
 using email_constructor.Application.Services;
 using email_constructor.Infrastructure.DatabaseInitializer;
 using email_constructor.Infrastructure.Interfaces;
@@ -24,7 +25,7 @@ public static class CommonDiExtensions
     
     public static IServiceCollection AddMapper(this IServiceCollection services)
     {
-        services.AddScoped<IContentBlockService, ContentBlockService>();
+        services.AddScoped<IMapper, Mapper>();
 
         return services;
     }

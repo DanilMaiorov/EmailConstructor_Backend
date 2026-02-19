@@ -16,4 +16,9 @@ public class ContentData
     /// Cписок блоков. 
     /// </summary>
     public List<BlockData> Blocks { get; set; }
+    
+    /// <summary>
+    /// Идентификатор магазина. 
+    /// </summary>
+    public bool IsDefaultBlock { get; init; }
 }

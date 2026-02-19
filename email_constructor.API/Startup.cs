@@ -18,6 +18,7 @@ public class Startup
         services.RegisterMongo(Configuration);
         services.AddRepositories();
         services.AddBlockServices();
+        services.AddMapper();
         services.AddDatabaseIndexes();
         services.AddGrpc(options =>
         {

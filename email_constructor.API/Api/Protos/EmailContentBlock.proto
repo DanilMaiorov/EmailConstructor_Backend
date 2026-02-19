@@ -10,7 +10,7 @@ message GetEmailContentBlockRequest {
   string languageId = 1;
   string storeId = 2;
   repeated Block blocks = 3;
-  bool isDefaultTemplate = 5;
+  bool isDefaultBlock = 5;
 }
 
 message GetEmailContentBlockResponse {

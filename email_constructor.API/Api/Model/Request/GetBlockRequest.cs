@@ -26,5 +26,5 @@ public class GetBlockRequest
     /// Атрибут шаблонного блока или блока конструктора.
     /// </summary>
     [Required] 
-    public bool IsDefaultTemplate { get; init; }
+    public bool IsDefaultBlock { get; init; }
 }

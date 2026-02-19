@@ -12,20 +12,18 @@ public class MongoContentBlockRepository : IContentBlockRepository
     {
         _database = database;
     }
-    public void GetContentBlock(string key, string storeId)
+    public async Task<List<ContentBlock>> GetContentBlocks(string storeId, List<string> blockTypes)
     {
         var collection = _database.GetCollection<ContentBlock>(ContentBlock.Collection);
-
-        var filter = Builders<ContentBlock>.Filter.And(
-            Builders<Common.Model.ContentBlock>.Filter.Eq(x => x.Key, key),
-            Builders<Common.Model.ContentBlock>.Filter.Eq(x => x.StoreId, storeId));
         
-        var contentBlock = collection.Find(filter).FirstOrDefault();
-
-        ;
+        var f = Builders<ContentBlock>.Filter;
+        var filter = f.Eq(x => x.StoreId, storeId);
         
+        if (blockTypes?.Any() == true)
+            filter = filter & f.In(x => x.Key, blockTypes);
         
+        var contentBlocks = await collection.Find(filter).ToListAsync();
         
-        return;
+        return contentBlocks;
     }
 }

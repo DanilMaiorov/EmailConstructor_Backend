@@ -1,4 +1,5 @@
 ﻿using email_constructor.Application.Interfaces;
+using email_constructor.Application.Models;
 using email_constructor.Common.Model;
 using email_constructor.Infrastructure.Interfaces;
 
@@ -13,16 +14,25 @@ public class ContentBlockService : IContentBlockService
         _contentBlockRepository = contentBlockRepository;
     }
     
-    public Task<ContentBlock> GetBlockAsync(string id, string storeId)
+    public async Task<List<ContentBlock>> GetBlocksAsync(ContentData contentData)
     {
-        _contentBlockRepository.GetContentBlock("default_btn", "ru");
+        var uniqueBlockTypes = contentData.Blocks.Select(b => b.Type).ToHashSet();
+        
+        var blockTypes = GetBlockTypes(uniqueBlockTypes, contentData.IsDefaultBlock);
+        
+        var blocks = await _contentBlockRepository.GetContentBlocks(contentData.StoreId, blockTypes);
         ;
-        throw new NotImplementedException();
+        return blocks;
     }
 
     public Task<ContentBlockWrapper> GetWrappedBlockAsync(string id, string storeId)
     {
         ;
         throw new NotImplementedException();
+    }
+
+    private static List<string> GetBlockTypes(HashSet<string> blockTypes, bool isDefault)
+    {
+        return isDefault ? blockTypes.Select(b => $"default_{b}").ToList() : blockTypes.ToList();
     }
 }
