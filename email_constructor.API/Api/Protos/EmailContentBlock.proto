@@ -10,6 +10,7 @@ message GetEmailContentBlockRequest {
   string languageId = 1;
   string storeId = 2;
   repeated Block blocks = 3;
+  WrapperType wrapperType = 4;
   bool isDefaultBlock = 5;
 }
 
@@ -20,4 +21,10 @@ message GetEmailContentBlockResponse {
 message Block {
   string type = 1;
   map<string, string> payload = 2;
+}
+
+enum WrapperType {
+  WRAPPER_NONE = 0;
+  WRAPPER_DEFAULT = 1;
+  WRAPPER_S_CARDS = 2;
 }

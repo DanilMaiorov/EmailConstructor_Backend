@@ -1,11 +1,15 @@
-﻿using email_constructor.Extensions;
+﻿using email_constructor.Api.Services;
+using email_constructor.Extensions;
 using email_constructor.Infrastructure.DatabaseInitializer;
-using email_constructor.Services;
 
 namespace email_constructor;
 
 public class Startup
 {
+    /// <summary>
+    /// ctor
+    /// </summary>
+    /// <param name="configuration"></param>
     public Startup(IConfiguration configuration)
     {
         Configuration = configuration;

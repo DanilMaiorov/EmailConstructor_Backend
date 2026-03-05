@@ -1,7 +1,8 @@
-﻿using MongoDB.Bson;
+﻿using email_constructor.Domain.Enums;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace email_constructor.Common.Model;
+namespace email_constructor.Domain.Model;
 
 /// <summary>
 /// Базовая модель блока конструктора.
@@ -35,12 +36,17 @@ public class ContentBlock
     public string Type { get; set; }
     
     /// <summary>
-    /// Paylod блока.
+    /// Payload блока.
     /// </summary>
     public Dictionary<string, string> Payload { get; set; }
     
     /// <summary>
-    /// Верстк блока.
+    /// Верстка блока.
     /// </summary>
     public List<Localization> Localizations { get; set; }
+    
+    /// <summary>
+    /// Тип обертки блока.
+    /// </summary>
+    public WrapperTypes WrapperType { get; set; }
 }

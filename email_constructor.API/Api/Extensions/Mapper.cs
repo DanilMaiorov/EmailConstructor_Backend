@@ -1,5 +1,4 @@
 using email_constructor.Application.Models;
-using email_constructor.Common.Model;
 
 namespace email_constructor.Api.Extensions;
 

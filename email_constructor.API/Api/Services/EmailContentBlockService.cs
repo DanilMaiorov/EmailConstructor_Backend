@@ -1,9 +1,8 @@
-﻿using email_constructor.Api;
-using email_constructor.Api.Extensions;
+﻿using email_constructor.Api.Extensions;
 using email_constructor.Application.Interfaces;
 using Grpc.Core;
 
-namespace email_constructor.Services;
+namespace email_constructor.Api.Services;
 
 public class EmailContentBlockService : EmailContentBlock.EmailContentBlockBase
 {
@@ -21,7 +20,7 @@ public class EmailContentBlockService : EmailContentBlock.EmailContentBlockBase
     {
         var mappedRequest = _mapper.MapToContentData(request);
         
-        var result = _contentBlockService.GetBlocksAsync(mappedRequest);
+        var result = await _contentBlockService.GetRenderedBlocksAsync(mappedRequest);
         
         return new GetEmailContentBlockResponse { };
     }

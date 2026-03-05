@@ -1,4 +1,4 @@
-using email_constructor.Common.Model;
+using email_constructor.Domain.Model;
 using MongoDB.Driver;
 
 namespace email_constructor.Infrastructure.DatabaseInitializer;

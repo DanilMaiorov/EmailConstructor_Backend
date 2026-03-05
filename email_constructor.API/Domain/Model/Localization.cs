@@ -1,4 +1,4 @@
-namespace email_constructor.Common.Model;
+namespace email_constructor.Domain.Model;
 
 public class Localization
 {

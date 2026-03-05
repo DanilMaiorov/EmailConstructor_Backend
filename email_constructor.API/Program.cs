@@ -1,7 +1,6 @@
-using email_constructor;
-using email_constructor.Services;
+namespace email_constructor;
 
-internal class Program
+public static class Program
 {
     public static void Main(string[] args)
     {
