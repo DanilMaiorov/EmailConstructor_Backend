@@ -25,5 +25,6 @@ public class BlockWrapper
     /// <summary>
     /// Тип обертки блока.
     /// </summary>
+    [BsonRepresentation(BsonType.String)]
     public WrapperTypes WrapperType { get; set; }
 }

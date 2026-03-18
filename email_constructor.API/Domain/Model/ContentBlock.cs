@@ -1,35 +1,7 @@
-﻿using email_constructor.Domain.Enums;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-
 namespace email_constructor.Domain.Model;
 
-/// <summary>
-/// Базовая модель блока конструктора.
-/// </summary>
 public class ContentBlock
 {
-    /// <summary>
-    /// Название коллекции.
-    /// </summary>
-    public static string Collection => nameof(ContentBlock);
-    
-    /// <summary>
-    /// Идентификатор блока.
-    /// </summary>
-    [BsonId]
-    public ObjectId Id { get; set; }
-    
-    /// <summary>
-    /// Идентификатор магазина. 
-    /// </summary>
-    public string StoreId { get; set; }
-    
-    /// <summary>
-    /// Ключ блока.
-    /// </summary>
-    public string Key { get; set; }
-    
     /// <summary>
     /// Тип блока.
     /// </summary>
@@ -38,15 +10,10 @@ public class ContentBlock
     /// <summary>
     /// Payload блока.
     /// </summary>
-    public Dictionary<string, string> Payload { get; set; }
+    public Dictionary<string, string>? Payload { get; set; }
     
     /// <summary>
-    /// Верстка блока.
+    /// Верстка обёртки.
     /// </summary>
-    public List<Localization> Localizations { get; set; }
-    
-    /// <summary>
-    /// Тип обертки блока.
-    /// </summary>
-    public WrapperTypes WrapperType { get; set; }
+    public string Html { get; set; }
 }

@@ -19,18 +19,18 @@ public class DatabaseInitializer
     
     private async Task EnsureContentBlocksIndexesAsync()
     {
-        var collection = _database.GetCollection<ContentBlock>(nameof(ContentBlock));
+        var collection = _database.GetCollection<DefaultBlock>(nameof(DefaultBlock));
 
-        var indexKeys = Builders<ContentBlock>.IndexKeys
+        var indexKeys = Builders<DefaultBlock>.IndexKeys
             .Ascending(x => x.StoreId)
-            .Ascending(x => x.Key);
+            .Ascending(x => x.Type);
 
-        var indexModel = new CreateIndexModel<ContentBlock>(
+        var indexModel = new CreateIndexModel<DefaultBlock>(
             indexKeys,
             new CreateIndexOptions
             {
                 Unique = true,
-                Name = "store_key_unique"
+                Name = "store_type_unique"
             });
 
         await collection.Indexes.CreateOneAsync(indexModel);

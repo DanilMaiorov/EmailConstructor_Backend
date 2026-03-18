@@ -1,5 +1,6 @@
 ﻿using email_constructor.Application.Interfaces;
 using email_constructor.Application.Models;
+using email_constructor.Domain.Enums;
 using email_constructor.Domain.Model;
 using email_constructor.Infrastructure.Interfaces;
 
@@ -17,19 +18,69 @@ public class ContentBlockService : IContentBlockService
     public async Task<List<RenderedBlock>> GetRenderedBlocksAsync(ContentData contentData)
     {
         var uniqueBlockTypes = contentData.Blocks.Select(b => b.Type).ToHashSet();
-        var blockTypes = GetBlockTypes(uniqueBlockTypes, contentData.IsDefaultBlock);
+        // var blockTypes = GetBlockTypes(uniqueBlockTypes, contentData.IsDefaultBlock);
+        var blockTypes = uniqueBlockTypes.ToList();
         
-        var contentBlocks = await _contentBlockRepository.GetContentBlocks(contentData.StoreId, blockTypes);
-        var contentBlockWrappers = await _contentBlockRepository.GetContentBlockWrappers();
-        var contentBlockWrappersDictionary = contentBlockWrappers.ToDictionary(w => w.WrapperType);
+        var defaultBlocks = await _contentBlockRepository.GetDefaultBlocks(contentData.StoreId, blockTypes);
+        var contentBlocksDictionary = defaultBlocks.ToDictionary(b => b.Type);
         
-        var renderedBlocks = contentBlocks.Select(block => RenderBlock(block, contentBlockWrappersDictionary[block.WrapperType])).ToList();
+        var blockWrappers = await _contentBlockRepository.GetBlockWrappers();
+        var blockWrappersDictionary = blockWrappers.ToDictionary(w => w.WrapperType);
+        
+        var defaultBlocksData = await _contentBlockRepository.GetDefaultBlocksData(contentData.StoreId, contentData.LanguageId, blockTypes);
+        var defaultBlocksDataDictionary = defaultBlocksData.ToDictionary(b=> b.Type);
+
+        FillDefaultPayload(defaultBlocks, contentData.Blocks, defaultBlocksDataDictionary);
+        
+
+        var s = contentData.Blocks.Select(block => new ContentBlock()
+        {
+            Type = block.Type,
+            Payload = FillPayload(contentBlocksDictionary[block.Type].Payload, block.Payload),
+            Html = GetLocalization(contentBlocksDictionary[block.Type].Localizations, contentData.LanguageId)
+        }).ToList();
+        ;
+        var renderedBlocks = s.Select(contentBlock => 
+            RenderBlock(
+                contentBlock, 
+                defaultBlocksDataDictionary[contentBlock.Type],
+                blockWrappersDictionary[WrapperTypes.Default])
+            ).ToList();
         
         return renderedBlocks;
     }
 
-    public RenderedBlock RenderBlock(ContentBlock block, BlockWrapper wrapper)
+    private string GetLocalization(List<Localization> localizations, string languageId)
     {
+        return localizations.First(l => l.LanguageId == languageId).Html;
+    }
+
+    private Dictionary<string, string>? FillPayload(Dictionary<string, string>? defaultPayload, Dictionary<string, string>? sourcePayload)
+    {
+        if (sourcePayload is null || sourcePayload.Count == 0) return defaultPayload;
+        
+        foreach (var (key, value) in sourcePayload)
+            defaultPayload[key] = value;
+        
+        return defaultPayload;
+    }
+
+    private void FillDefaultPayload(List<DefaultBlock>? defaultBlocks, List<BlockData>? blockData, Dictionary<string,DefaultBlockData>? defaultBlocksDataDictionary)
+    {
+        var filledBlocks = defaultBlocks?
+            .Select(block =>
+            {
+                if (defaultBlocksDataDictionary?.TryGetValue(block.Type, out var defaultData) == true)
+                    block.Payload = new Dictionary<string, string>(defaultData.Payload);
+                return block;
+            })
+            .ToList();
+    }
+
+    public RenderedBlock RenderBlock(ContentBlock block, DefaultBlockData defaultData, BlockWrapper wrapper)
+    {
+        //написать логику рендера блока
+        //заполнять блок данными и помещать блок в обёртку
         var block1 = block; 
         var wrapper1 = wrapper; 
         
