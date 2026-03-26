@@ -17,7 +17,6 @@ public class MongoContentBlockRepository : IContentBlockRepository
     {
         var collection = _database.GetCollection<DefaultBlock>(DefaultBlock.Collection);
         var filter = Builders<DefaultBlock>.Filter.And(
-            Builders<DefaultBlock>.Filter.Eq(x => x.StoreId, storeId),
             Builders<DefaultBlock>.Filter.In(x => x.Type, blockTypes));
         
         var contentBlocks = await collection.Find(filter).ToListAsync();

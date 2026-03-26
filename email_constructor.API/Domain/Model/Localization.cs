@@ -5,7 +5,7 @@ public class Localization
     /// <summary>
     /// Идентификатор языка.
     /// </summary>
-    public string LanguageId { get; set; }
+    public List<string> LanguageId { get; set; }
     
     /// <summary>
     /// Верстка элемента.

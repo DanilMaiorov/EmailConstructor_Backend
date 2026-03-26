@@ -30,15 +30,17 @@ public class ContentBlockService : IContentBlockService
         var defaultBlocksData = await _contentBlockRepository.GetDefaultBlocksData(contentData.StoreId, contentData.LanguageId, blockTypes);
         var defaultBlocksDataDictionary = defaultBlocksData.ToDictionary(b=> b.Type);
 
-        FillDefaultPayload(defaultBlocks, contentData.Blocks, defaultBlocksDataDictionary);
+        FillDefaultPayload(defaultBlocks, defaultBlocksDataDictionary);
         
-
+        
         var s = contentData.Blocks.Select(block => new ContentBlock()
         {
             Type = block.Type,
             Payload = FillPayload(contentBlocksDictionary[block.Type].Payload, block.Payload),
             Html = GetLocalization(contentBlocksDictionary[block.Type].Localizations, contentData.LanguageId)
         }).ToList();
+        
+        
         ;
         var renderedBlocks = s.Select(contentBlock => 
             RenderBlock(
@@ -52,7 +54,7 @@ public class ContentBlockService : IContentBlockService
 
     private string GetLocalization(List<Localization> localizations, string languageId)
     {
-        return localizations.First(l => l.LanguageId == languageId).Html;
+        return localizations.First(l => l.LanguageId.Contains(languageId)).Html;
     }
 
     private Dictionary<string, string>? FillPayload(Dictionary<string, string>? defaultPayload, Dictionary<string, string>? sourcePayload)
@@ -65,9 +67,9 @@ public class ContentBlockService : IContentBlockService
         return defaultPayload;
     }
 
-    private void FillDefaultPayload(List<DefaultBlock>? defaultBlocks, List<BlockData>? blockData, Dictionary<string,DefaultBlockData>? defaultBlocksDataDictionary)
+    private void FillDefaultPayload(List<DefaultBlock>? defaultBlocks, Dictionary<string,DefaultBlockData>? defaultBlocksDataDictionary)
     {
-        var filledBlocks = defaultBlocks?
+        var blocks = defaultBlocks?
             .Select(block =>
             {
                 if (defaultBlocksDataDictionary?.TryGetValue(block.Type, out var defaultData) == true)

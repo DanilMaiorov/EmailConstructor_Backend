@@ -21,11 +21,6 @@ public class DefaultBlock
     public ObjectId Id { get; set; }
     
     /// <summary>
-    /// Идентификатор магазина. 
-    /// </summary>
-    public string StoreId { get; set; }
-    
-    /// <summary>
     /// Тип блока.
     /// </summary>
     public string Type { get; set; }
