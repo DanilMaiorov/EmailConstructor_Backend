@@ -10,7 +10,7 @@ public class ContentBlock
     /// <summary>
     /// Payload блока.
     /// </summary>
-    public Dictionary<string, string>? Payload { get; set; }
+    public Dictionary<string, string> Payload { get; set; }
     
     /// <summary>
     /// Верстка обёртки.

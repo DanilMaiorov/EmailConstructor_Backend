@@ -1,4 +1,5 @@
-﻿using email_constructor.Application.Interfaces;
+﻿using System.Text;
+using email_constructor.Application.Interfaces;
 using email_constructor.Application.Models;
 using email_constructor.Domain.Enums;
 using email_constructor.Domain.Model;
@@ -67,6 +68,16 @@ public class ContentBlockService : IContentBlockService
         return defaultPayload;
     }
 
+    private void FillHtmlFromPayload(ContentBlock block)
+    {
+        var result = new StringBuilder(block.Html);
+        foreach (var (key, value) in block.Payload)
+        {
+            result.Replace($"#{{{key}}}", value);
+        }
+        block.Html = result.ToString();
+    }
+
     private void FillDefaultPayload(List<DefaultBlock>? defaultBlocks, Dictionary<string,DefaultBlockData>? defaultBlocksDataDictionary)
     {
         var blocks = defaultBlocks?
@@ -83,10 +94,14 @@ public class ContentBlockService : IContentBlockService
     {
         //написать логику рендера блока
         //заполнять блок данными и помещать блок в обёртку
-        var block1 = block; 
-        var wrapper1 = wrapper; 
+        FillHtmlFromPayload(block);
         
-        return new RenderedBlock();
+        return new RenderedBlock
+        {
+            Id = Guid.NewGuid().ToString(),
+            Type = block.Type,
+            Html = wrapper.WrapperHtml.Replace($"#{{content}}", block.Html),
+        };
     }
 
     private static List<string> GetBlockTypes(HashSet<string> blockTypes, bool isDefault)
