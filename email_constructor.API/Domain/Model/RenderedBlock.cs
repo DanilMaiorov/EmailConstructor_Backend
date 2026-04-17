@@ -18,6 +18,11 @@ public class RenderedBlock
     public string Html { get; set; }
     
     /// <summary>
+    /// Payload блока.
+    /// </summary>
+    public Dictionary<string, string> Payload { get; set; }
+    
+    /// <summary>
     /// Опционально: видимость (если нужно скрывать блок на фронте без удаления).
     /// </summary>
     public bool IsVisible { get; set; } = true;

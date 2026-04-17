@@ -62,19 +62,19 @@ public class ContentBlockService : IContentBlockService
     {
         if (sourcePayload is null || sourcePayload.Count == 0) return defaultPayload;
         
-        foreach (var (key, value) in sourcePayload)
-            defaultPayload[key] = value;
+        foreach (var (key, value) in defaultPayload)
+            sourcePayload.TryAdd(key, value);
         
-        return defaultPayload;
+        return sourcePayload;
     }
 
     private void FillHtmlFromPayload(ContentBlock block)
     {
         var result = new StringBuilder(block.Html);
+        
         foreach (var (key, value) in block.Payload)
-        {
             result.Replace($"#{{{key}}}", value);
-        }
+        
         block.Html = result.ToString();
     }
 
@@ -92,8 +92,6 @@ public class ContentBlockService : IContentBlockService
 
     public RenderedBlock RenderBlock(ContentBlock block, DefaultBlockData defaultData, BlockWrapper wrapper)
     {
-        //написать логику рендера блока
-        //заполнять блок данными и помещать блок в обёртку
         FillHtmlFromPayload(block);
         
         return new RenderedBlock
@@ -101,6 +99,7 @@ public class ContentBlockService : IContentBlockService
             Id = Guid.NewGuid().ToString(),
             Type = block.Type,
             Html = wrapper.WrapperHtml.Replace($"#{{content}}", block.Html),
+            Payload = block.Payload,
         };
     }
 

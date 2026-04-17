@@ -1,11 +1,12 @@
 using email_constructor.Application.Models;
+using email_constructor.Domain.Model;
 
 namespace email_constructor.Api.Extensions;
 
 public interface IMapper
 {
     ContentData MapToContentData(GetEmailContentBlockRequest request);
-    GetEmailContentBlockResponse MapToResponse(List<BlockData> blocks);
+    GetEmailContentBlockResponse MapToResponse(List<RenderedBlock> blocks);
 }
 public class Mapper : IMapper
 {
@@ -25,17 +26,18 @@ public class Mapper : IMapper
             Payload = block.Payload.ToDictionary(),
         };
     
-    public GetEmailContentBlockResponse MapToResponse(List<BlockData> blocks) =>
+    public GetEmailContentBlockResponse MapToResponse(List<RenderedBlock> blocks) =>
         new()
         {
             Blocks = { blocks.Select(MapToBlock) }
         };
     
     
-    private static Block MapToBlock(BlockData blockData) => 
+    private static Block MapToBlock(RenderedBlock renderedBlock) => 
         new()
         {
-            Type = blockData.Type, 
-            Payload = { blockData.Payload }
+            Type = renderedBlock.Type,
+            Html = renderedBlock.Html,
+            Payload = { renderedBlock.Payload }
         };
 }

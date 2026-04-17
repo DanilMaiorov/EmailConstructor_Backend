@@ -22,6 +22,12 @@ public class EmailContentBlockService : EmailContentBlock.EmailContentBlockBase
         
         var result = await _contentBlockService.GetRenderedBlocksAsync(mappedRequest);
         
-        return new GetEmailContentBlockResponse { };
+        var mappedResponse = _mapper.MapToResponse(result);
+
+        var response = new GetEmailContentBlockResponse();
+        
+        response.Blocks.AddRange(mappedResponse.Blocks);
+        
+        return response;
     }
 }

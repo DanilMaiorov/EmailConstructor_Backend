@@ -1,4 +1,5 @@
 ﻿using email_constructor.Api.Extensions;
+using email_constructor.Api.Services;
 using email_constructor.Application.Interfaces;
 using email_constructor.Application.Services;
 using email_constructor.Infrastructure.DatabaseInitializer;
@@ -29,6 +30,13 @@ public static class CommonDiExtensions
 
         return services;
     }
+    
+    public static IServiceCollection AddParser(this IServiceCollection services)
+    {
+        services.AddScoped<IParserService, ExcelParserService>();
+
+        return services;
+    }
 
     public static IServiceCollection AddDatabaseIndexes(this IServiceCollection services)
     {
@@ -36,4 +44,12 @@ public static class CommonDiExtensions
 
         return services;
     }
+    
+    public static void MapCommunicationApiGrpcEndpoints(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGrpcService<EmailContentBlockService>();
+        endpoints.MapControllers();
+    }
+    
+
 }

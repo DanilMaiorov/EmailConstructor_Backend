@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="AspNetCore.HealthChecks.MongoDb" Version="9.0.0" />
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
         <PackageReference Include="Grpc.AspNetCore" Version="2.57.0"/>
         <PackageReference Include="MongoDB.Bson" Version="3.6.0" />
         <PackageReference Include="MongoDB.Driver" Version="3.6.0" />
@@ -21,6 +22,10 @@
       <Protobuf Include="Api\Protos\EmailContentBlock.proto">
         <Generator>MSBuild:Compile</Generator>
       </Protobuf>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Application\Extensions\" />
     </ItemGroup>
 
 </Project>

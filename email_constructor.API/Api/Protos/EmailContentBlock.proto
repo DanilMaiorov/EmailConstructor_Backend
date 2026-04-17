@@ -20,7 +20,8 @@ message GetEmailContentBlockResponse {
 
 message Block {
   string type = 1;
-  map<string, string> payload = 2;
+  string Html = 2;
+  map<string, string> payload = 3;
 }
 
 enum WrapperType {
