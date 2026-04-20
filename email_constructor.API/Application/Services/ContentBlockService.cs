@@ -1,26 +1,33 @@
 ﻿using System.Text;
 using email_constructor.Application.Interfaces;
 using email_constructor.Application.Models;
+using email_constructor.Cache;
 using email_constructor.Domain.Enums;
 using email_constructor.Domain.Model;
 using email_constructor.Infrastructure.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace email_constructor.Application.Services;
 
 public class ContentBlockService : IContentBlockService
 {
     private readonly IContentBlockRepository _contentBlockRepository;
-
-    public ContentBlockService(IContentBlockRepository contentBlockRepository)
+    private readonly IProductCache _productCache;
+    private IReadOnlyList<Product> _products;
+    
+    public ContentBlockService(IContentBlockRepository contentBlockRepository, IProductCache productCache)
     {
         _contentBlockRepository = contentBlockRepository;
+        _productCache = productCache;
     }
     
-    public async Task<List<RenderedBlock>> GetRenderedBlocksAsync(ContentData contentData)
+    public async Task<List<RenderedBlock>> GetRenderedBlocksAsync(ContentData contentData, CancellationToken ct)
     {
         var uniqueBlockTypes = contentData.Blocks.Select(b => b.Type).ToHashSet();
-        // var blockTypes = GetBlockTypes(uniqueBlockTypes, contentData.IsDefaultBlock);
         var blockTypes = uniqueBlockTypes.ToList();
+
+        if (!string.IsNullOrEmpty(contentData.ProductCacheKey))
+            _products = await _productCache.TryGetProducts(contentData.ProductCacheKey, ct);
         
         var defaultBlocks = await _contentBlockRepository.GetDefaultBlocks(contentData.StoreId, blockTypes);
         var contentBlocksDictionary = defaultBlocks.ToDictionary(b => b.Type);
@@ -34,17 +41,16 @@ public class ContentBlockService : IContentBlockService
         FillDefaultPayload(defaultBlocks, defaultBlocksDataDictionary);
         
         
-        var s = contentData.Blocks.Select(block => new ContentBlock()
-        {
-            Type = block.Type,
-            Payload = FillPayload(contentBlocksDictionary[block.Type].Payload, block.Payload),
-            Html = GetLocalization(contentBlocksDictionary[block.Type].Localizations, contentData.LanguageId)
-        }).ToList();
+        var blockToRender = contentData.Blocks
+            .Select(block => new ContentBlock
+            {
+                Type = block.Type,
+                Payload = FillPayload(contentBlocksDictionary[block.Type].Payload, block.Payload),
+                Html = GetLocalization(contentBlocksDictionary[block.Type].Localizations, contentData.LanguageId)
+            }).ToList();
         
-        
-        ;
-        var renderedBlocks = s.Select(contentBlock => 
-            RenderBlock(
+        var renderedBlocks = blockToRender
+            .Select(contentBlock => RenderBlock(
                 contentBlock, 
                 defaultBlocksDataDictionary[contentBlock.Type],
                 blockWrappersDictionary[WrapperTypes.Default])
@@ -53,12 +59,9 @@ public class ContentBlockService : IContentBlockService
         return renderedBlocks;
     }
 
-    private string GetLocalization(List<Localization> localizations, string languageId)
-    {
-        return localizations.First(l => l.LanguageId.Contains(languageId)).Html;
-    }
-
-    private Dictionary<string, string>? FillPayload(Dictionary<string, string>? defaultPayload, Dictionary<string, string>? sourcePayload)
+    private string GetLocalization(List<Localization> localizations, string languageId) => localizations.First(l => l.LanguageId.Contains(languageId)).Html;
+    
+    private static Dictionary<string, string>? FillPayload(Dictionary<string, string>? defaultPayload, Dictionary<string, string>? sourcePayload)
     {
         if (sourcePayload is null || sourcePayload.Count == 0) return defaultPayload;
         
@@ -68,7 +71,7 @@ public class ContentBlockService : IContentBlockService
         return sourcePayload;
     }
 
-    private void FillHtmlFromPayload(ContentBlock block)
+    private static void FillHtmlFromPayload(ContentBlock block)
     {
         var result = new StringBuilder(block.Html);
         
@@ -78,7 +81,7 @@ public class ContentBlockService : IContentBlockService
         block.Html = result.ToString();
     }
 
-    private void FillDefaultPayload(List<DefaultBlock>? defaultBlocks, Dictionary<string,DefaultBlockData>? defaultBlocksDataDictionary)
+    private static void FillDefaultPayload(List<DefaultBlock>? defaultBlocks, Dictionary<string,DefaultBlockData>? defaultBlocksDataDictionary)
     {
         var blocks = defaultBlocks?
             .Select(block =>
@@ -92,6 +95,15 @@ public class ContentBlockService : IContentBlockService
 
     public RenderedBlock RenderBlock(ContentBlock block, DefaultBlockData defaultData, BlockWrapper wrapper)
     {
+        if (block.Type != "header" && block.Type != "footer")
+            return new RenderedBlock
+            {
+                Id = Guid.NewGuid().ToString(),
+                Type = block.Type,
+                Html = block.Html,
+                Payload = block.Payload,
+            };
+        
         FillHtmlFromPayload(block);
         
         return new RenderedBlock

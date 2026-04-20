@@ -1,6 +1,7 @@
+using email_constructor.Api.Extensions;
 using email_constructor.Api.Model.Request;
+// using email_constructor.Api.Services;
 using email_constructor.Application.Interfaces;
-using email_constructor.Application.Services;
 using email_constructor.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -11,24 +12,21 @@ namespace email_constructor.Controllers;
 [Route("api/v1/[controller]")]
 public class TestController : ControllerBase
 {
-    private readonly IParserService _parserService;
+    private readonly IContentBlockService _contentBlockService;
+    private readonly IFileUploadService _fileUploadService;
+    private readonly IMapper _mapper;
     private readonly ILogger<TestController> _logger;
     
-    public TestController(IParserService parserService, ILogger<TestController> logger)
+    public TestController(
+        IFileUploadService fileUploadService, 
+        IContentBlockService contentBlockService,
+        IMapper mapper,
+        ILogger<TestController> logger)
     {
-        _parserService = parserService;
+        _contentBlockService = contentBlockService;
+        _fileUploadService = fileUploadService;
+        _mapper = mapper;
         _logger = logger;
-    }
-    
-    
-
-    
-
-    [HttpGet]
-    public IActionResult Get()
-    {
-        _logger.LogInformation("Test endpoint called");
-        return Ok(new { message = "Hello from backend!" });
     }
     
     [HttpPost("GetEmailContentBlock")]
@@ -38,7 +36,22 @@ public class TestController : ControllerBase
     {
         Console.WriteLine(request);
         _logger.LogInformation("Test endpoint called");
-        return Ok(new { message = "Hello from GetEmailContentBlock!" });
+        return Ok(new { message = "Hello from РУЧКА ДЛЯ КОНСТРУКТОРА!" });
+    }
+    
+    
+    [HttpPost("GetEmailTemplate")]
+    public async Task<IActionResult> GetEmailTemplate(
+        [FromBody] GetEmailTemplateRequest request, 
+        CancellationToken ct)
+    {
+        var mappedRequest = _mapper.MapToContentData(request);
+        
+        var template = await _contentBlockService.GetRenderedBlocksAsync(mappedRequest, ct);
+        
+        var result = template.ToJson();
+            
+        return Ok(result);
     }
     
     [HttpPost("upload/excel")]
@@ -52,11 +65,11 @@ public class TestController : ControllerBase
             if (file == null || file.Length == 0)
                 return BadRequest("File cannot be null or empty");
 
-            var products = await _parserService.GetProducts(file, fileType, ct);
-            var json = products.ToJson();
+            var products = await _fileUploadService.UploadAndCacheAsync(file, fileType, ct);
+            var result = products.ToJson();
         
             _logger.LogInformation("UploadExcel endpoint called");
-            return Ok(json);
+            return Ok(result);
         }
         catch (Exception e)
         {

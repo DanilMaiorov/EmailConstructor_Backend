@@ -1,6 +1,5 @@
 ﻿using email_constructor.Domain.Model;
 using email_constructor.Infrastructure.Interfaces;
-using Google.Protobuf.WellKnownTypes;
 using MongoDB.Driver;
 
 namespace email_constructor.Infrastructure.Repositories;

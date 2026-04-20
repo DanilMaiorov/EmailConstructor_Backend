@@ -21,4 +21,9 @@ public class ContentData
     /// Идентификатор магазина. 
     /// </summary>
     public bool IsDefaultBlock { get; init; }
+    
+    /// <summary>
+    /// Ключ кэша с продуктами
+    /// </summary>
+    public string ProductCacheKey { get; init; }
 }

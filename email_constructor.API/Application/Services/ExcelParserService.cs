@@ -9,6 +9,7 @@ namespace email_constructor.Application.Services;
 /// </summary>
 public class ExcelParserService : IParserService
 {
+    
     public async Task<IEnumerable<Product>> GetProducts(IFormFile file, UploadFileType fileType, CancellationToken ct)
     {
         if (fileType != UploadFileType.Excel) throw new ArgumentException("Invalid file type");

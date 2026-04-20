@@ -3,7 +3,7 @@ using email_constructor.Domain.Enums;
 
 namespace email_constructor.Api.Model.Request;
 
-public class GetBlockRequest
+public class GetEmailTemplateRequest
 {
     /// <summary>
     /// Язык.
@@ -17,17 +17,17 @@ public class GetBlockRequest
     [Required] 
     public string StoreId { get; init; }
     
-    // /// <summary>
-    // /// Ключ кеша продуктов. 
-    // /// </summary>
-    // [Required] 
-    // public string ProductCacheKey { get; init; }
-    //
-    // /// <summary>
-    // /// Список блоков.
-    // /// </summary>
-    // [Required] 
-    // public List<Block> Blocks { get; init; }
+    /// <summary>
+    /// Ключ кеша продуктов. 
+    /// </summary>
+    [Required] 
+    public string ProductCacheKey { get; init; }
+    
+    /// <summary>
+    /// Список блоков.
+    /// </summary>
+    [Required] 
+    public List<Block> Blocks { get; init; }
     
     /// <summary>
     /// Список блоков.

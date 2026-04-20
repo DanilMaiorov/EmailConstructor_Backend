@@ -3,18 +3,19 @@ syntax = "proto3";
 option csharp_namespace = "email_constructor.Api";
 
 service EmailContentBlock {
-  rpc GetEmailContentBlock (GetEmailContentBlockRequest) returns (GetEmailContentBlockResponse);
+  rpc GetEmailTemplate (GetEmailTemplateRequest) returns (GetEmailTemplateResponse);
 }
 
-message GetEmailContentBlockRequest {
+message GetEmailTemplateRequest {
   string languageId = 1;
   string storeId = 2;
-  repeated Block blocks = 3;
-  WrapperType wrapperType = 4;
-  bool isDefaultBlock = 5;
+  string productCacheKey = 3;
+  repeated Block blocks = 4;
+  WrapperType wrapperType = 5;
+  bool isDefaultBlock = 6;
 }
 
-message GetEmailContentBlockResponse {
+message GetEmailTemplateResponse {
   repeated Block blocks = 1;
 }
 

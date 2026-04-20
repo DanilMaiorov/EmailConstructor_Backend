@@ -1,4 +1,6 @@
-﻿using email_constructor.Api.Services;
+﻿// using email_constructor.Api.Services;
+
+using System.Text.Json.Serialization;
 using email_constructor.Extensions;
 using email_constructor.Infrastructure.DatabaseInitializer;
 
@@ -19,6 +21,8 @@ public class Startup
     
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddApplicationOptions();
+        services.AddCaching();
         services.RegisterMongo(Configuration);
         services.AddRepositories();
         services.AddBlockServices();
@@ -30,8 +34,14 @@ public class Startup
             options.MaxReceiveMessageSize = 10 * 1024 * 1024;
             options.MaxSendMessageSize = 10 * 1024 * 1024;
         });
+        services.AddFileUploader();
         services.AddControllers();
+        // services.AddGrpcClients(Configuration);
         services.AddCors();
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
     }
     
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DatabaseInitializer databaseInitializer)
@@ -49,7 +59,8 @@ public class Startup
             .AllowAnyHeader());
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapCommunicationApiGrpcEndpoints();
+            endpoints.MapEmailConstructorApiEndpoints();
+            // endpoints.MapCommunicationApiGrpcEndpoints();
         });
     }
 }
