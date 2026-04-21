@@ -40,7 +40,6 @@ public class ContentBlockService : IContentBlockService
 
         FillDefaultPayload(defaultBlocks, defaultBlocksDataDictionary);
         
-        
         var blockToRender = contentData.Blocks
             .Select(block => new ContentBlock
             {
@@ -95,23 +94,21 @@ public class ContentBlockService : IContentBlockService
 
     public RenderedBlock RenderBlock(ContentBlock block, DefaultBlockData defaultData, BlockWrapper wrapper)
     {
-        if (block.Type != "header" && block.Type != "footer")
-            return new RenderedBlock
-            {
-                Id = Guid.NewGuid().ToString(),
-                Type = block.Type,
-                Html = block.Html,
-                Payload = block.Payload,
-            };
-        
-        FillHtmlFromPayload(block);
-        
+        var isSpecialBlock = block.Type is "header" or "footer";
+    
+        if (isSpecialBlock)
+            FillHtmlFromPayload(block);
+    
+        var html = isSpecialBlock 
+            ? wrapper.WrapperHtml.Replace("#{content}", block.Html)
+            : block.Html;
+    
         return new RenderedBlock
         {
             Id = Guid.NewGuid().ToString(),
             Type = block.Type,
-            Html = wrapper.WrapperHtml.Replace($"#{{content}}", block.Html),
-            Payload = block.Payload,
+            Html = html,
+            Payload = block.Payload
         };
     }
 
