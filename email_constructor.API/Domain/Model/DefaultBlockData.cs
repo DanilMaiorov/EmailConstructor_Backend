@@ -30,11 +30,20 @@ public class DefaultBlockData
     public string LanguageId { get; set; }
     
     /// <summary>
+    /// Ключ блока.
+    /// </summary>
+    public string Key { get; set; }
+    
+    /// <summary>
     /// Тип блока.
     /// </summary>
     public string Type { get; set; }
     
-        
+    /// <summary>
+    /// Вариант блока.
+    /// </summary>
+    public string Variant { get; set; }
+    
     /// <summary>
     /// Payload блока.
     /// </summary>

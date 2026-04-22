@@ -13,7 +13,7 @@ public class ContentBlockService : IContentBlockService
 {
     private readonly IContentBlockRepository _contentBlockRepository;
     private readonly IProductCache _productCache;
-    private IReadOnlyList<Product> _products;
+    
     
     public ContentBlockService(IContentBlockRepository contentBlockRepository, IProductCache productCache)
     {
@@ -23,42 +23,48 @@ public class ContentBlockService : IContentBlockService
     
     public async Task<List<RenderedBlock>> GetRenderedBlocksAsync(ContentData contentData, CancellationToken ct)
     {
-        var uniqueBlockTypes = contentData.Blocks.Select(b => b.Type).ToHashSet();
-        var blockTypes = uniqueBlockTypes.ToList();
+        IReadOnlyList<Product> products;
 
         if (!string.IsNullOrEmpty(contentData.ProductCacheKey))
-            _products = await _productCache.TryGetProducts(contentData.ProductCacheKey, ct);
+            products = await _productCache.TryGetProducts(contentData.ProductCacheKey, ct);
         
-        var defaultBlocks = await _contentBlockRepository.GetDefaultBlocks(contentData.StoreId, blockTypes);
-        var contentBlocksDictionary = defaultBlocks.ToDictionary(b => b.Type);
+        var blocks = await _contentBlockRepository.GetBlocks(contentData.StoreId, contentData.Blocks);
+        var contentBlocksDictionary = blocks.ToDictionary(b => b.Key);
         
         var blockWrappers = await _contentBlockRepository.GetBlockWrappers();
         var blockWrappersDictionary = blockWrappers.ToDictionary(w => w.WrapperType);
         
-        var defaultBlocksData = await _contentBlockRepository.GetDefaultBlocksData(contentData.StoreId, contentData.LanguageId, blockTypes);
-        var defaultBlocksDataDictionary = defaultBlocksData.ToDictionary(b=> b.Type);
+        var defaultBlocksData = await _contentBlockRepository.GetBlocksDefaultData(contentData.StoreId, contentData.LanguageId, contentData.Blocks);
+        var defaultBlocksDataDictionary = defaultBlocksData.ToDictionary(b=> b.Key);
 
-        FillDefaultPayload(defaultBlocks, defaultBlocksDataDictionary);
+        FillDefaultPayload(blocks, defaultBlocksDataDictionary);
         
         var blockToRender = contentData.Blocks
-            .Select(block => new ContentBlock
+            .Select(block => 
             {
-                Type = block.Type,
-                Payload = FillPayload(contentBlocksDictionary[block.Type].Payload, block.Payload),
-                Html = GetLocalization(contentBlocksDictionary[block.Type].Localizations, contentData.LanguageId)
+                var localization = GetLocalization(contentBlocksDictionary[block.Key].Localizations, contentData.LanguageId);
+                return new ContentBlock
+                {
+                    Key = block.Key,
+                    Type = block.Type,
+                    Variant = block.Variant,
+                    Payload = FillPayload(contentBlocksDictionary[block.Key].Payload, block.Payload),
+                    Html = localization.Html,
+                    Css = localization.Css
+                };
             }).ToList();
         
         var renderedBlocks = blockToRender
             .Select(contentBlock => RenderBlock(
                 contentBlock, 
-                defaultBlocksDataDictionary[contentBlock.Type],
+                defaultBlocksDataDictionary[contentBlock.Key],
                 blockWrappersDictionary[WrapperTypes.Default])
             ).ToList();
         
         return renderedBlocks;
     }
 
-    private string GetLocalization(List<Localization> localizations, string languageId) => localizations.First(l => l.LanguageId.Contains(languageId)).Html;
+    private static Localization GetLocalization(List<Localization> localizations, string languageId) => localizations.First(l => l.LanguageId.Contains(languageId));
     
     private static Dictionary<string, string>? FillPayload(Dictionary<string, string>? defaultPayload, Dictionary<string, string>? sourcePayload)
     {
@@ -85,7 +91,7 @@ public class ContentBlockService : IContentBlockService
         var blocks = defaultBlocks?
             .Select(block =>
             {
-                if (defaultBlocksDataDictionary?.TryGetValue(block.Type, out var defaultData) == true)
+                if (defaultBlocksDataDictionary?.TryGetValue(block.Key, out var defaultData) == true)
                     block.Payload = new Dictionary<string, string>(defaultData.Payload);
                 return block;
             })
@@ -94,26 +100,23 @@ public class ContentBlockService : IContentBlockService
 
     public RenderedBlock RenderBlock(ContentBlock block, DefaultBlockData defaultData, BlockWrapper wrapper)
     {
-        var isSpecialBlock = block.Type is "header" or "footer";
-    
-        if (isSpecialBlock)
-            FillHtmlFromPayload(block);
+        var isSpecialBlock = block.Key is "header" or "footer" or "banner";
+        
+         FillHtmlFromPayload(block);
     
         var html = isSpecialBlock 
-            ? wrapper.WrapperHtml.Replace("#{content}", block.Html)
-            : block.Html;
+            ? block.Html
+            : wrapper.WrapperHtml.Replace("#{content}", block.Html);
     
         return new RenderedBlock
         {
             Id = Guid.NewGuid().ToString(),
+            Key = block.Key,
             Type = block.Type,
+            Variant = block.Variant,
             Html = html,
+            Css = block.Css,
             Payload = block.Payload
         };
-    }
-
-    private static List<string> GetBlockTypes(HashSet<string> blockTypes, bool isDefault)
-    {
-        return isDefault ? blockTypes.Select(b => $"default_{b}").ToList() : blockTypes.ToList();
     }
 }

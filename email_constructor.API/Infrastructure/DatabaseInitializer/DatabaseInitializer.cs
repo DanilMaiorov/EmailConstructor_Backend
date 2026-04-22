@@ -22,7 +22,10 @@ public class DatabaseInitializer
         var collection = _database.GetCollection<DefaultBlock>(nameof(DefaultBlock));
 
         var indexKeys = Builders<DefaultBlock>.IndexKeys
-            .Ascending(x => x.Type);
+            .Ascending(x => x.Key)
+            .Ascending(x => x.Type)
+            .Ascending(x => x.Variant)
+            .Ascending(x => x.StoreId);
 
         var indexModel = new CreateIndexModel<DefaultBlock>(
             indexKeys,

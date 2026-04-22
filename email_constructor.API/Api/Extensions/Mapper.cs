@@ -23,7 +23,9 @@ public class Mapper : IMapper
     private static BlockData MapToBlockData(email_constructor.Api.Model.Block block) => 
         new()
         {
+            Key = block.Key,
             Type = block.Type,
+            Variant = block.Variant,
             Payload = block.Payload.ToDictionary(),
         };
     

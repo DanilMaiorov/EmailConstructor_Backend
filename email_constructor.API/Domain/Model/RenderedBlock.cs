@@ -8,14 +8,29 @@ public class RenderedBlock
     public string Id { get; set; }
 
     /// <summary>
+    /// Ключ блока.
+    /// </summary>
+    public string Key { get; set; }
+    
+    /// <summary>
     /// Тип блока.
     /// </summary>
     public string Type { get; set; }
+    
+    /// <summary>
+    /// Вариант блока.
+    /// </summary>
+    public string Variant { get; set; }
 
     /// <summary>
     /// Готовая верстка: обертка + наполнение. 
     /// </summary>
     public string Html { get; set; }
+    
+    /// <summary>
+    /// Готовые мобильные стили. 
+    /// </summary>
+    public string Css { get; set; }
     
     /// <summary>
     /// Payload блока.

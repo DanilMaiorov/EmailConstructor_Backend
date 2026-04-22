@@ -1,4 +1,5 @@
-﻿using email_constructor.Domain.Model;
+﻿using email_constructor.Application.Models;
+using email_constructor.Domain.Model;
 using email_constructor.Infrastructure.Interfaces;
 using MongoDB.Driver;
 
@@ -12,24 +13,43 @@ public class MongoContentBlockRepository : IContentBlockRepository
     {
         _database = database;
     }
-    public async Task<List<DefaultBlock>> GetDefaultBlocks(string storeId, List<string> blockTypes)
+    public async Task<List<DefaultBlock>> GetBlocks(string storeId, List<BlockData> blockTypes)
     {
         var collection = _database.GetCollection<DefaultBlock>(DefaultBlock.Collection);
+        
+        var blockTypeFilter = blockTypes.Select(b => 
+            Builders<DefaultBlock>.Filter.And(
+                Builders<DefaultBlock>.Filter.Eq(x => x.Key, b.Key),
+                Builders<DefaultBlock>.Filter.Eq(x => x.Type, b.Type),
+                Builders<DefaultBlock>.Filter.Eq(x => x.Variant, b.Variant)
+            )
+        ).ToList();
+    
         var filter = Builders<DefaultBlock>.Filter.And(
-            Builders<DefaultBlock>.Filter.In(x => x.Type, blockTypes));
+            Builders<DefaultBlock>.Filter.Eq(x => x.StoreId, storeId),
+            Builders<DefaultBlock>.Filter.Or(blockTypeFilter)
+        );
         
-        var contentBlocks = await collection.Find(filter).ToListAsync();
-        
-        return contentBlocks;
+        return await collection.Find(filter).ToListAsync();
     }
 
-    public async Task<List<DefaultBlockData>> GetDefaultBlocksData(string storeId, string languageId, List<string> blockTypes)
+    public async Task<List<DefaultBlockData>> GetBlocksDefaultData(string storeId, string languageId, List<BlockData> blockTypes)
     {
         var collection = _database.GetCollection<DefaultBlockData>(DefaultBlockData.Collection);
+        
+        var blockTypeFilter = blockTypes.Select(b => 
+            Builders<DefaultBlockData>.Filter.And(
+                Builders<DefaultBlockData>.Filter.Eq(x => x.Key, b.Key),
+                Builders<DefaultBlockData>.Filter.Eq(x => x.Type, b.Type),
+                Builders<DefaultBlockData>.Filter.Eq(x => x.Variant, b.Variant)
+            )
+        ).ToList();
+        
         var filter = Builders<DefaultBlockData>.Filter.And(
             Builders<DefaultBlockData>.Filter.Eq(x => x.StoreId, storeId),
             Builders<DefaultBlockData>.Filter.Eq(x => x.LanguageId, languageId),
-            Builders<DefaultBlockData>.Filter.In(x => x.Type, blockTypes));
+            Builders<DefaultBlockData>.Filter.Or(blockTypeFilter)
+            );
         
         var defaultBlocksData = await collection.Find(filter).ToListAsync();
         
@@ -44,15 +64,15 @@ public class MongoContentBlockRepository : IContentBlockRepository
         return blockWrappers;
     }
 
-    // private FilterDefinition<T> BuildFilter<T>(string storeId, List<string> blockTypes) 
-    //     where T : IBlockFilter
+    // private List<FilterDefinition<T>> BuildBlockTypeFilter<T>(List<BlockData> blockTypes) 
+    //     where T : DefaultBlockData, BlockData
     // {
-    //     var f = Builders<T>.Filter;
-    //     var filter = f.Eq(x => x.StoreId, storeId);
-    //     
-    //     if (blockTypes.Count > 0)
-    //         filter = filter & f.In(x => x.Key, blockTypes);
-    //     
-    //     return filter;
+    //     return blockTypes.Select(b => 
+    //         Builders<T>.Filter.And(
+    //             Builders<T>.Filter.Eq(x => x.Key, b.Key),
+    //             Builders<T>.Filter.Eq(x => x.Type, b.Type),
+    //             Builders<T>.Filter.Eq(x => x.Variant, b.Variant)
+    //         )
+    //     ).ToList();
     // }
 }

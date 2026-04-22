@@ -46,11 +46,8 @@ public class TestController : ControllerBase
         CancellationToken ct)
     {
         var mappedRequest = _mapper.MapToContentData(request);
-        
         var template = await _contentBlockService.GetRenderedBlocksAsync(mappedRequest, ct);
-        
         var result = template.ToJson();
-            
         return Ok(result);
     }
     

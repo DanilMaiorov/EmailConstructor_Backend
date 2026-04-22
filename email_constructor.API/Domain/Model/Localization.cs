@@ -11,4 +11,9 @@ public class Localization
     /// Верстка элемента.
     /// </summary>
     public string Html { get; set; }
+    
+    /// <summary>
+    /// Мобильные стили элемента.
+    /// </summary>
+    public string Css { get; set; }
 }
