@@ -21,7 +21,6 @@ public static class MongoDiExtensions
 
         ConfigureMongo();
         // RegisterEntitiesClassMap();
-
         return services;
     }
 
