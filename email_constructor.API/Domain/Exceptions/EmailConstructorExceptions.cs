@@ -22,7 +22,7 @@ public static class EmailConstructorExceptions
     /// Шаблон не найден.
     /// </summary>
     /// <param name="type">Тип шаблона.</param>
-    public class TemplateNotFoundException(TemplateType type)
+    public class TemplateNotFoundException(string type)
         : InvalidRequestException(
             $"Неизвестный templateType '{type}'.");
     

@@ -10,13 +10,18 @@ public interface IMapper
     ContentData MapToContentData(email_constructor.Api.Model.Request.GetEmailTemplateRequest request);
     GetEmailTemplateResponse MapToResponse(List<RenderedBlock> blocks);
 }
+
 public class Mapper : IMapper
 {
     /// <summary>
     /// Мапит запрос в модель данных для обработки шаблона.
     /// </summary>
-    public ContentData MapToContentData(email_constructor.Api.Model.Request.GetEmailTemplateRequest request) =>
-        new()
+    public ContentData MapToContentData(email_constructor.Api.Model.Request.GetEmailTemplateRequest request)
+    {
+        if (request.Blocks is null || request.Blocks.Count == 0)
+            throw new EmailConstructorExceptions.InvalidRequestException("Письмо должно содержать хотя бы один блок.");
+        
+        return new ContentData
         {
             LanguageId = request.LanguageId,
             StoreId = request.StoreId,
@@ -25,8 +30,9 @@ public class Mapper : IMapper
             TemplateType = ParseTemplateType(request.IsConstructor, request.TemplateType),
             ProductCacheKey = request.ProductCacheKey,
         };
+    }
 
-    /// <summary>
+/// <summary>
     /// Мапит запрос в модель данных для обработки шаблона.
     /// </summary>
     private static BlockData MapToBlockData(email_constructor.Api.Model.Block block) => 
@@ -72,6 +78,6 @@ public class Mapper : IMapper
             && string.Equals(templateType.ToString(), value, StringComparison.OrdinalIgnoreCase))
             return templateType;
 
-        throw new EmailConstructorExceptions.TemplateNotFoundException(templateType);
+        throw new EmailConstructorExceptions.TemplateNotFoundException(value);
     }
 }
