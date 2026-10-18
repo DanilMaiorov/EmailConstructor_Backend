@@ -24,11 +24,10 @@ public class ContentBlockService : IContentBlockService
     
     public async Task<List<RenderedBlock>> GetRenderedBlocksAsync(ContentData contentData, CancellationToken ct)
     {
-
         EnsureProductsProvided(contentData);
         
         IReadOnlyList<Product> products;
-
+        
         if (!string.IsNullOrEmpty(contentData.ProductCacheKey))
             products = await _productCache.TryGetProducts(contentData.ProductCacheKey, ct);
         

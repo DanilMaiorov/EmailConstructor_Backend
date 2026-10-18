@@ -7,8 +7,8 @@ Content-Type: application/json
 {
   "languageId": "ru_RU",
   "storeId": "by",
-  "productCacheKey": "",
-  "templateType": "test",
+  "productCacheKey": "integration-test-products",
+  "templateType": "template_s",
   "blocks": [
     { "key": "header", "type": "header_default", "variant": "default", "payload": {} },
     { "key": "banner", "type": "banner_default", "variant": "default",
@@ -18,7 +18,7 @@ Content-Type: application/json
     { "key": "footer", "type": "marketing", "variant": "with_offer", "payload": {} }
   ],
   "wrapperType": 1,
-  "isConstructor": true
+  "isConstructor": false
 }
 
 > {%

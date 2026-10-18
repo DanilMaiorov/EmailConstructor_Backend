@@ -15,6 +15,14 @@ public interface IProductCache
     Task<string> SetCacheProducts(IEnumerable<Product> products, CancellationToken cancellationToken);
     
     /// <summary>
+    /// Установить продукты в кэш.
+    /// </summary>
+    /// <param name="products">Коллекция Products</param>
+    /// <param name="cacheKey">Ключ кэша</param>
+    /// <param name="cancellationToken"></param>
+    Task<string> SetCacheProducts(IEnumerable<Product> products, string cacheKey, CancellationToken cancellationToken);
+    
+    /// <summary>
     /// Получить продукты из кэша (если время кэширование не истекло).
     /// </summary>
     /// <param name="cancellationToken"></param>

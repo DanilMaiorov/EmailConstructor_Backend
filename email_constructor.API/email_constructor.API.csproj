@@ -20,6 +20,7 @@
         <PackageReference Include="MongoDB.Bson" Version="3.6.0" />
         <PackageReference Include="MongoDB.Driver" Version="3.6.0" />
         <PackageReference Include="MongoDB.Driver.Core" Version="2.30.0" />
+        <PackageReference Include="Moq" Version="4.21.0" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.15.0" />
         <PackageReference Include="Parlem.HealthChecks.MongoDb" Version="8.0.0" />
     </ItemGroup>

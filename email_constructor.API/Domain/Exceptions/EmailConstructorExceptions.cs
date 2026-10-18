@@ -14,8 +14,7 @@ public static class EmailConstructorExceptions
     /// Шаблон обязателен для выбранного режима работы.
     /// </summary>
     public class TemplateTypeRequiredException()
-        : InvalidRequestException(
-            $"Для шаблонного письма нужен templateType.");
+        : InvalidRequestException($"Для шаблонного письма нужен templateType.");
     
     
     /// <summary>
@@ -23,8 +22,7 @@ public static class EmailConstructorExceptions
     /// </summary>
     /// <param name="type">Тип шаблона.</param>
     public class TemplateNotFoundException(string type)
-        : InvalidRequestException(
-            $"Неизвестный templateType '{type}'.");
+        : InvalidRequestException($"Неизвестный templateType '{type}'.");
     
 
     /// <summary>
@@ -32,6 +30,5 @@ public static class EmailConstructorExceptions
     /// </summary>
     /// <param name="type">Тип шаблона.</param>
     public class ProductsRequiredException(TemplateType type)
-        : InvalidRequestException(
-            $"Для шаблона {type} нужен файл с продуктами (productCacheKey).");
+        : InvalidRequestException($"Для шаблона {type} нужен файл с продуктами (productCacheKey).");
 }

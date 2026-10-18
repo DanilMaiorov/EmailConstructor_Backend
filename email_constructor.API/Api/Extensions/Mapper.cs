@@ -32,7 +32,7 @@ public class Mapper : IMapper
         };
     }
 
-/// <summary>
+    /// <summary>
     /// Мапит запрос в модель данных для обработки шаблона.
     /// </summary>
     private static BlockData MapToBlockData(email_constructor.Api.Model.Block block) => 

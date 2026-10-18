@@ -25,6 +25,11 @@ public class ProductCache : IProductCache
     {
         var cacheKey = $"excel_products_{Guid.NewGuid()}";
         
+        return await SetCacheProducts(products, cacheKey, cancellationToken);
+    }
+
+    public async Task<string> SetCacheProducts(IEnumerable<Product> products, string cacheKey, CancellationToken cancellationToken)
+    {
         _memoryCache.Set(cacheKey, products.ToList(), _productCacheOptions.ProductsCacheLifeInMinutes);
         
         return await Task.FromResult(cacheKey);
