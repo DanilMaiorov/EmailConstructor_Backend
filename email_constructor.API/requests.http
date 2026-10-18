@@ -1,0 +1,28 @@
+@host = http://localhost:5000
+
+### by / without_cd_dates_and_button
+POST http://localhost:5012/api/v1/Test/GetEmailTemplate
+Content-Type: application/json
+
+{
+  "languageId": "ru_RU",
+  "storeId": "by",
+  "productCacheKey": "",
+  "templateType": "test",
+  "blocks": [
+    { "key": "header", "type": "header_default", "variant": "default", "payload": {} },
+    { "key": "banner", "type": "banner_default", "variant": "default",
+      "payload": { "url": "https://goldapple.by", "alt": "alt", "img_desktop": "https://example.com/d.jpg", "img_mobile": "https://example.com/m.jpg" } },
+    { "key": "text", "type": "text_default", "variant": "without_cd_dates_and_button",
+      "payload": { "title": "Тест", "text": "Текст" } },
+    { "key": "footer", "type": "marketing", "variant": "with_offer", "payload": {} }
+  ],
+  "wrapperType": 1,
+  "isDefaultBlock": true
+}
+
+> {%
+    client.test("200", () => client.assert(response.status === 200));
+    client.test("нет неподставленных плейсхолдеров", () =>
+        client.assert(!JSON.stringify(response.body).includes("#{")));
+%}

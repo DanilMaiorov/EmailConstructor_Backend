@@ -20,7 +20,6 @@ public class GetEmailTemplateRequest
     /// <summary>
     /// Ключ кеша продуктов. 
     /// </summary>
-    [Required] 
     public string ProductCacheKey { get; init; }
     
     /// <summary>

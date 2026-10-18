@@ -5,10 +5,13 @@ namespace email_constructor.Domain.Enums;
 /// </summary>
 public enum UploadFileType
 {
+    //Нет файла
+    None = 0,
+    
     /// <summary>
     /// Excel
     /// </summary>
-    Excel,
+    Excel = 1,
     
     /// <summary>
     /// Любой другой тип
