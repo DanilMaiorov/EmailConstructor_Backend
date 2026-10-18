@@ -18,7 +18,7 @@ Content-Type: application/json
     { "key": "footer", "type": "marketing", "variant": "with_offer", "payload": {} }
   ],
   "wrapperType": 1,
-  "isDefaultBlock": true
+  "isConstructor": true
 }
 
 > {%

@@ -36,8 +36,8 @@ public class GetBlockRequest
     public WrapperTypes WrapperType { get; init; }
     
     /// <summary>
-    /// Атрибут шаблонного блока или блока конструктора.
+    /// Режим сборки. true — конструктор, false — шаблонное письмо. 
     /// </summary>
     [Required] 
-    public bool IsDefaultBlock { get; init; }
+    public bool IsConstructor { get; init; }
 }

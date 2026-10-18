@@ -2,10 +2,11 @@
 using email_constructor.Application.Interfaces;
 using email_constructor.Application.Models;
 using email_constructor.Cache;
+using email_constructor.Domain;
 using email_constructor.Domain.Enums;
+using email_constructor.Domain.Exceptions;
 using email_constructor.Domain.Model;
 using email_constructor.Infrastructure.Interfaces;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace email_constructor.Application.Services;
 
@@ -23,6 +24,9 @@ public class ContentBlockService : IContentBlockService
     
     public async Task<List<RenderedBlock>> GetRenderedBlocksAsync(ContentData contentData, CancellationToken ct)
     {
+
+        EnsureProductsProvided(contentData);
+        
         IReadOnlyList<Product> products;
 
         if (!string.IsNullOrEmpty(contentData.ProductCacheKey))
@@ -102,7 +106,7 @@ public class ContentBlockService : IContentBlockService
     {
         var isSpecialBlock = block.Key is "header" or "footer" or "banner";
         
-         FillHtmlFromPayload(block);
+        FillHtmlFromPayload(block);
     
         var html = isSpecialBlock 
             ? block.Html
@@ -118,5 +122,19 @@ public class ContentBlockService : IContentBlockService
             Css = block.Css,
             Payload = block.Payload
         };
+    }
+    
+    /// <summary>
+    /// Проверяет наличие обязательных данных для шаблона.
+    /// </summary>
+    private static void EnsureProductsProvided(ContentData data)
+    {
+        if (data.IsConstructor) return;
+
+        var type = data.TemplateType 
+                   ?? throw new EmailConstructorExceptions.TemplateTypeRequiredException();
+
+        if (TemplateRules.RequiresProducts(type) && string.IsNullOrEmpty(data.ProductCacheKey))
+            throw new EmailConstructorExceptions.ProductsRequiredException(type);
     }
 }

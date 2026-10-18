@@ -1,3 +1,5 @@
+using email_constructor.Domain.Enums;
+
 namespace email_constructor.Application.Models;
 
 public class ContentData
@@ -18,9 +20,14 @@ public class ContentData
     public List<BlockData> Blocks { get; set; }
     
     /// <summary>
-    /// Идентификатор магазина. 
+    /// Режим сборки. true — конструктор, false — шаблонное письмо. 
     /// </summary>
-    public bool IsDefaultBlock { get; init; }
+    public bool IsConstructor { get; init; }
+    
+    /// <summary>
+    /// Тип шаблонного письма. Заполнен только если IsConstructor = false.
+    /// </summary>
+    public TemplateType? TemplateType { get; init; }
     
     /// <summary>
     /// Ключ кэша с продуктами

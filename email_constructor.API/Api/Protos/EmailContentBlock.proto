@@ -12,7 +12,8 @@ message GetEmailTemplateRequest {
   string productCacheKey = 3;
   repeated Block blocks = 4;
   WrapperType wrapperType = 5;
-  bool isDefaultBlock = 6;
+  bool isConstructor = 6;
+  string templateType = 7;
 }
 
 message GetEmailTemplateResponse {

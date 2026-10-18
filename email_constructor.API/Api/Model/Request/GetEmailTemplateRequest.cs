@@ -18,15 +18,21 @@ public class GetEmailTemplateRequest
     public string StoreId { get; init; }
     
     /// <summary>
-    /// Ключ кеша продуктов. 
-    /// </summary>
-    public string ProductCacheKey { get; init; }
-    
-    /// <summary>
     /// Список блоков.
     /// </summary>
     [Required] 
     public List<Block> Blocks { get; init; }
+        
+    /// <summary>
+    /// Режим сборки. true — конструктор, false — шаблонное письмо. 
+    /// </summary>
+    [Required] 
+    public bool IsConstructor { get; init; }
+    
+    /// <summary>
+    /// Тип шаблонного письма. Заполнен только если IsConstructor = false.
+    /// </summary>
+    public string? TemplateType { get; init; }
     
     /// <summary>
     /// Список блоков.
@@ -35,8 +41,7 @@ public class GetEmailTemplateRequest
     public WrapperTypes WrapperType { get; init; }
     
     /// <summary>
-    /// Атрибут шаблонного блока или блока конструктора.
+    /// Ключ кеша продуктов. 
     /// </summary>
-    [Required] 
-    public bool IsDefaultBlock { get; init; }
+    public string ProductCacheKey { get; init; }
 }

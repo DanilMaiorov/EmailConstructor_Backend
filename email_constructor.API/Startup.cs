@@ -35,7 +35,7 @@ public class Startup
             options.MaxSendMessageSize = 10 * 1024 * 1024;
         });
         services.AddFileUploader();
-        services.AddControllers();
+        services.AddControllers(o => o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
         // services.AddGrpcClients(Configuration);
         services.AddCors();
         services.ConfigureHttpJsonOptions(options =>
