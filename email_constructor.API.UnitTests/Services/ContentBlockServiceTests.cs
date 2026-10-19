@@ -5,6 +5,7 @@ using email_constructor.Application.Models;
 using email_constructor.Application.Services;
 using email_constructor.Cache;
 using email_constructor.Domain.Enums;
+using email_constructor.Domain.Exceptions;
 using email_constructor.Domain.Model;
 using email_constructor.Infrastructure.Interfaces;
 using Moq;
@@ -29,84 +30,342 @@ public class ContentBlockServiceTests
             _productCache.Object);
     }
     
-    [Fact]
-    public async Task GetRenderedBlocksAsync_ShouldFillHeaderPayloadWithDefaults()
+    [Theory]
+    [InlineData("ru", "ru_RU", "header", "header_default", "default")]
+    [InlineData("ru", "ru_RU", "footer", "marketing", "with_offer")]
+    [InlineData("ru", "ru_RU", "banner", "banner_default", "default")]
+    [InlineData("ru", "ru_RU", "button", "button_default", "default")]
+    [InlineData("ru", "ru_RU", "text", "text_default", "default")]
+    [InlineData("ru", "ru_RU", "text", "text_default", "without_button")]
+    [InlineData("ru", "ru_RU", "text", "text_default", "without_cd_dates")]
+    [InlineData("ru", "ru_RU", "text", "text_default", "without_cd_dates_and_button")]
+    public async Task GetRenderedBlocksAsync_ShouldFillPayloadWithDefaults(
+        string storeId,
+        string languageId,
+        string key,
+        string type,
+        string variant)
     {
-        // Arrange
-        const string storeId = "ru";
-        const string languageId = "ru_RU";
-        const string key = "header";
-        const string type = "header_default";
-        const string variant = "default";
-
         var request = CreateRequest(
             storeId, 
             languageId,
             productCacheKey: string.Empty,
             isConstructor: false,
             templateType: "template_Info",
-            (key, type, variant));
+            (key, type, variant, null));
         
         var contentData = _mapper.MapToContentData(request);
 
-        var expectedPayload = CreateDefaultBlockDataPayload(key);
-
+        var expectedPayload = CreateDefaultBlockDataPayload(key, variant);
+        
         SetupBlockMocks(
             storeId, 
             languageId, 
-            (key, type, variant, expectedPayload, "<h1>Test header</h1>"));
-
-        // Act
+            (key, type, variant, expectedPayload, $"<h1>Test {key}</h1>"));
+        
         var result = await _sut.GetRenderedBlocksAsync(
             contentData,
             CancellationToken.None);
-
-        // Assert
-        var header = Assert.Single(result);
-
-        Assert.Equal(key, header.Key);
-        Assert.Equal(expectedPayload, header.Payload);
+        
+        var block = Assert.Single(result);
+        Assert.Equal(key, block.Key);
+        Assert.Equal(variant, block.Variant);
+        Assert.Equal(expectedPayload, block.Payload);
     }
     
-    
-    [Fact]
-    public async Task GetRenderedBlocksAsync_ShouldFillFooterPayloadWithDefaults()
+    [Theory]
+    [InlineData("ru", "ru_RU","banner", "banner_default", "default")]
+    [InlineData("ru", "ru_RU","button", "button_default", "default")]
+    [InlineData("ru", "ru_RU","text", "text_default", "default")]
+    public async Task GetRenderedBlocksAsync_ShouldPreserveFullyFilledPayload(
+        string storeId,
+        string languageId,
+        string key,
+        string type,
+        string variant)
     {
-        // Arrange
-        const string storeId = "ru";
-        const string languageId = "ru_RU";
-        const string key = "footer";
-        const string type = "footer_default";
-        const string variant = "default";
+        var requestPayload = CreateDefaultBlockDataPayload(key)
+            .ToDictionary(x => x.Key, x => $"custom_{x.Value}");
 
+        var expectedPayload = new Dictionary<string, string>(requestPayload);
+        
         var request = CreateRequest(
-            storeId, 
+            storeId,
             languageId,
             productCacheKey: string.Empty,
             isConstructor: false,
             templateType: "template_Info",
-            (key, type, variant));
-        
+            (key, type, variant, requestPayload));
+
         var contentData = _mapper.MapToContentData(request);
+        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
 
-        var expectedPayload = CreateDefaultBlockDataPayload(key);
-        
         SetupBlockMocks(
-            storeId, 
-            languageId, 
-            (key, type, variant, expectedPayload, "<h1>Test footer</h1>"));
+            storeId,
+            languageId,
+            (key, type, variant, defaultPayload, "<div>Test</div>"));
 
-        // Act
         var result = await _sut.GetRenderedBlocksAsync(
             contentData,
             CancellationToken.None);
 
-        // Assert
-        var footer = Assert.Single(result);
+        var block = Assert.Single(result);
 
-        Assert.Equal(key, footer.Key);
-        Assert.Equal(expectedPayload, footer.Payload);
+        Assert.Equal(expectedPayload, block.Payload);
     }
+    
+    [Fact]
+    public async Task GetRenderedBlocksAsync_ShouldFillMissingPayloadFieldsWithDefaults()
+    {
+        var storeId = "ru";
+        var languageId = "ru_RU";
+        var key = "text";
+        var type = "text_default";
+        var variant = "default";
+
+        var requestPayload = new Dictionary<string, string>
+        {
+            ["title"] = "Заголовок из реквеста",
+            ["url"] = "https://custom.test"
+        };
+
+        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
+
+        var expectedPayload = new Dictionary<string, string>(requestPayload);
+
+        foreach (var (payloadKey, value) in defaultPayload)
+            expectedPayload.TryAdd(payloadKey, value);
+
+        var request = CreateRequest(
+            storeId,
+            languageId,
+            productCacheKey: string.Empty,
+            isConstructor: false,
+            templateType: "template_Info",
+            (key, type, variant, requestPayload));
+
+        var contentData = _mapper.MapToContentData(request);
+
+        SetupBlockMocks(
+            storeId,
+            languageId,
+            (key, type, variant, defaultPayload, "<div>Test</div>"));
+        
+        var result = await _sut.GetRenderedBlocksAsync(
+            contentData,
+            CancellationToken.None);
+        
+        var block = Assert.Single(result);
+
+        Assert.Equal(expectedPayload.Count, block.Payload!.Count);
+
+        foreach (var (payloadKey, value) in expectedPayload)
+            Assert.Equal(value, block.Payload[payloadKey]);
+    }
+    
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task GetRenderedBlocksAsync_ShouldTreatEmptyRequestValueAsMissing(string emptyValue)
+    {
+        var storeId = "ru";
+        var languageId = "ru_RU";
+        var key = "banner";
+        var type = "banner_default";
+        var variant = "default";
+
+        var requestPayload = new Dictionary<string, string>
+        {
+            ["url"] = "https://custom.test",
+            ["alt"] = emptyValue
+        };
+        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
+
+        var request = CreateRequest(
+            storeId,
+            languageId,
+            productCacheKey: string.Empty,
+            isConstructor: false,
+            templateType: "template_Info",
+            (key, type, variant, requestPayload));
+
+        var contentData = _mapper.MapToContentData(request);
+
+        SetupBlockMocks(storeId, languageId, (key, type, variant, defaultPayload, "<div>Test</div>"));
+
+        var result = await _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None);
+
+        var block = Assert.Single(result);
+        
+        Assert.Equal("https://custom.test", block.Payload!["url"]);
+        Assert.Equal(defaultPayload["alt"], block.Payload["alt"]);
+    }
+    
+    [Fact]
+    public async Task GetRenderedBlocksAsync_ShouldSubstitutePayloadIntoHtml()
+    {
+        var storeId = "ru";
+        var languageId = "ru_RU";
+        var key = "banner";
+        var type = "banner_default";
+        var variant = "default";
+
+        var requestPayload = new Dictionary<string, string>
+        {
+            ["url"] = "https://custom.test",
+            ["alt"] = "Свой alt"
+        };
+        
+        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
+
+        var request = CreateRequest(
+            storeId,
+            languageId,
+            productCacheKey: string.Empty,
+            isConstructor: false,
+            templateType: "template_Info",
+            (key, type, variant, requestPayload));
+        
+        var contentData = _mapper.MapToContentData(request);
+
+        const string html = "<a href=\"#{url}\"><img src=\"#{img_desktop}\" alt=\"#{alt}\"></a>";
+        
+        SetupBlockMocks(storeId, languageId, (key, type, variant, defaultPayload, html));
+
+        var result = await _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None);
+
+        var block = Assert.Single(result);
+        
+        var expectedHtml = $"<a href=\"https://custom.test\"><img src=\"{defaultPayload["img_desktop"]}\" alt=\"Свой alt\"></a>";
+        
+        Assert.Equal(expectedHtml, block.Html);
+    }
+    
+    [Fact]
+    public async Task GetRenderedBlocksAsync_ShouldThrow_WhenProductTemplateHasNoProducts()
+    {
+        var request = CreateRequest(
+            "ru", "ru_RU",
+            productCacheKey: string.Empty,
+            isConstructor: false,
+            templateType: "template_S",
+            ("header", "header_default", "default", null));
+        
+        var contentData = _mapper.MapToContentData(request);
+
+        await Assert.ThrowsAsync<EmailConstructorExceptions.ProductsRequiredException>(
+            () => _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None));
+
+        // падаем рано: до базы даже не дошли
+        _contentBlockRepository.Verify(
+            x => x.GetBlocks(It.IsAny<string>(), It.IsAny<List<BlockData>>()),
+            Times.Never);
+    }
+    
+    [Fact]
+    public async Task GetRenderedBlocksAsync_ShouldThrow_WhenProductTemplateHasProducts()
+    {
+        var request = CreateRequest(
+            "ru", "ru_RU",
+            productCacheKey: "cacheKey",
+            isConstructor: false,
+            templateType: "template_S",
+            ("header", "header_default", "default", null));
+        
+        var contentData = _mapper.MapToContentData(request);
+
+        SetupProductCache("cacheKey");
+        
+        SetupBlockMocks(
+            "ru", "ru_RU",
+            ("header", "header_default", "default", CreateDefaultBlockDataPayload("header"), "<a></a>"));
+        
+        var result = await _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None);
+        
+        Assert.Single(result);
+        
+        _productCache.Verify(
+            x => x.TryGetProducts("cacheKey", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+    
+    [Fact]
+    public async Task GetRenderedBlocksAsync_ShouldThrow_WhenProductTemplateHasNoProductsAndHasNoCacheKey()
+    {
+        var request = CreateRequest(
+            "ru", "ru_RU",
+            productCacheKey: string.Empty,
+            isConstructor: false,
+            templateType: "template_info",
+            ("header", "header_default", "default", null));
+        
+        var contentData = _mapper.MapToContentData(request);
+        
+        SetupBlockMocks(
+            "ru", "ru_RU",
+            ("header", "header_default", "default", CreateDefaultBlockDataPayload("header"), "<a></a>"));
+
+        var result = await _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None);
+        
+        Assert.Single(result);
+
+        _contentBlockRepository.Verify(
+            x => x.GetBlocks(It.IsAny<string>(), It.IsAny<List<BlockData>>()),
+            Times.Once);
+        
+        _productCache.Verify(
+            x => x.TryGetProducts(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     private void SetupBlockMocks(
         string storeId,
@@ -167,7 +426,7 @@ public class ContentBlockServiceTests
         string productCacheKey = "",
         bool isConstructor = false,
         string templateType = "template_Info",
-        params (string Key, string Type, string Variant)[] blocks) => new()
+        params (string Key, string Type, string Variant, Dictionary<string, string>? Payload)[] blocks) => new()
         {
             StoreId = storeId,
             LanguageId = languageId,
@@ -175,7 +434,7 @@ public class ContentBlockServiceTests
             IsConstructor = isConstructor,
             TemplateType = templateType,
             Blocks = blocks
-                .Select(x => CreateBlock(x.Key, x.Type, x.Variant))
+                .Select(x => CreateBlock(x.Key, x.Type, x.Variant, x.Payload))
                 .ToList()
         };
     
@@ -262,46 +521,68 @@ public class ContentBlockServiceTests
             };
         }
 
-        private static Dictionary<string, string> CreateDefaultBlockDataPayload(string key) => 
-            key switch
+        private static Dictionary<string, string> CreateDefaultBlockDataPayload(string key, string variant = "default") => 
+            (key, variant) switch
         {
-            "header" => new Dictionary<string, string>
-                {
-                    ["url"] = "https://goldapple.test.header.ru"
-                },
-            
-            "footer" => new Dictionary<string, string>
-                {
-                    ["url"] = "https://goldapple.test.footer.ru"
-                },
-
-            "button" => new Dictionary<string, string>
-                {
-                    ["img_desktop"] = "https://email-images.mindbox.ru/708656/4764969/18.jpg",
-                    ["img_mobile"] = "https://email-images.mindbox.ru/708656/4764969/23.jpg",
-                    ["alt"] = "Перейти к покупкам из теста",
-                    ["url"] = "https://goldapple.test.button.ru"
-                },
-            
-            "text" => new Dictionary<string, string>
+            ("header", "default") => new Dictionary<string, string>
             {
-                    ["cd_dates"] = "1 января из теста",
-                    ["title"] = "Заголовок из теста",
-                    ["font_family"] = "Helvetica, Arial, sans-serif",
-                    ["text"] = "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusam… из теста",
-                    ["url"] = "https://goldapple.test.text.button.ru",
-                    ["img_desktop"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
-                    ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
-                    ["alt"] = "Сатып алуға өту из теста"
-                },
-
-            "banner" => new Dictionary<string, string>
+                ["url"] = "https://goldapple.test.header.ru"
+            },
+            
+            ("footer", "with_offer")  => new Dictionary<string, string>
             {
-                    ["img_desktop"] = "https://email-images.mindbox.ru/Goldappleru/18275/416ddb12-30c7-45f4-b…",
-                    ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/18275/339ba462-3b07-44cd-a…",
-                    ["alt"] = "alt_banner_ из_теста",
-                    ["url"] = "https://goldapple.test.banner.ru"
-                },
+                ["url"] = "https://goldapple.test.footer.ru"
+            },
+
+            ("button", "default")  => new Dictionary<string, string>
+            {
+                ["img_desktop"] = "https://email-images.mindbox.ru/708656/4764969/18.jpg",
+                ["img_mobile"] = "https://email-images.mindbox.ru/708656/4764969/23.jpg",
+                ["alt"] = "Перейти к покупкам из теста",
+                ["url"] = "https://goldapple.test.button.ru"
+            },
+            
+            ("text", "default")  => new Dictionary<string, string>
+            {
+                ["cd_dates"] = "1 января из теста default",
+                ["title"] = "Заголовок из теста default",
+                ["font_family"] = "Helvetica, Arial, sans-serif",
+                ["text"] = "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusam… из теста default",
+                ["url"] = "https://goldapple.test.text.button.default.ru",
+                ["img_desktop"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
+                ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
+                ["alt"] = "Сатып алуға өту из теста default"
+            },
+            ("text", "without_cd_dates")  => new Dictionary<string, string>
+            {
+                ["title"] = "Заголовок из теста without_cd_dates",
+                ["font_family"] = "Helvetica, Arial, sans-serif",
+                ["text"] = "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusam… из теста without_cd_dates",
+                ["url"] = "https://goldapple.test.text.button.without_cd_dates.ru",
+                ["img_desktop"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
+                ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
+                ["alt"] = "Сатып алуға өту из теста without_cd_dates"
+            },
+            ("text", "without_button")  => new Dictionary<string, string>
+            {
+                ["cd_dates"] = "1 января из теста without_button",
+                ["title"] = "Заголовок из теста without_button",
+                ["font_family"] = "Helvetica, Arial, sans-serif",
+                ["text"] = "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusam… из теста without_button"
+            },
+            ("text", "without_cd_dates_and_button")  => new Dictionary<string, string>
+            {
+                ["title"] = "Заголовок из теста without_cd_dates_and_button",
+                ["font_family"] = "Helvetica, Arial, sans-serif",
+                ["text"] = "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusam… из теста without_cd_dates_and_button"
+            },
+            ("banner", "default")  => new Dictionary<string, string>
+            {
+                ["img_desktop"] = "https://email-images.mindbox.ru/Goldappleru/18275/416ddb12-30c7-45f4-b…",
+                ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/18275/339ba462-3b07-44cd-a…",
+                ["alt"] = "alt_banner_ из_теста",
+                ["url"] = "https://goldapple.test.banner.ru"
+            },
             
             _ => throw new ArgumentOutOfRangeException(nameof(key), key, null)
         };
@@ -309,12 +590,13 @@ public class ContentBlockServiceTests
         private static Block CreateBlock(
             string key,
             string type,
-            string variant = "default") => new()
+            string variant = "default",
+            Dictionary<string, string>? payload = null) => new()
         {
             Key = key,
             Type = type,
             Variant = variant,
-            Payload = new Dictionary<string, string>()
+            Payload = payload ?? new Dictionary<string, string>()
         };
         
 }

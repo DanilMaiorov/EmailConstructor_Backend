@@ -74,9 +74,14 @@ public class ContentBlockService : IContentBlockService
         if (sourcePayload is null || sourcePayload.Count == 0) return defaultPayload;
         
         foreach (var (key, value) in defaultPayload)
-            sourcePayload.TryAdd(key, value);
+        {
+            if (!sourcePayload.TryGetValue(key, out var sourceValue) || string.IsNullOrWhiteSpace(sourceValue))
+                sourcePayload[key] = value;
+        }
         
         return sourcePayload;
+        
+        //todo добавить информирование о том, какие поля были заполнены из дефолтных
     }
 
     private static void FillHtmlFromPayload(ContentBlock block)
