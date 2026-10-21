@@ -37,21 +37,17 @@ public class ContentBlockService : IContentBlockService
         var blockWrappers = await _contentBlockRepository.GetBlockWrappers();
         var blockWrappersDictionary = blockWrappers.ToDictionary(w => w.WrapperType);
         
-        var defaultBlocksData = await _contentBlockRepository.GetBlocksDefaultData(contentData.StoreId, contentData.LanguageId, contentData.Blocks);
-        var defaultBlocksDataDictionary = defaultBlocksData.ToDictionary(b=> b.Key);
-
-        FillDefaultPayload(blocks, defaultBlocksDataDictionary);
-        
         var blockToRender = contentData.Blocks
             .Select(block => 
             {
                 var localization = GetLocalization(contentBlocksDictionary[block.Key].Localizations, contentData.LanguageId);
+                
                 return new ContentBlock
                 {
                     Key = block.Key,
                     Type = block.Type,
                     Variant = block.Variant,
-                    Payload = FillPayload(contentBlocksDictionary[block.Key].Payload, block.Payload),
+                    Payload = FillPayload(localization.Payload, block.Payload),
                     Html = localization.Html,
                     Css = localization.Css
                 };
@@ -60,7 +56,6 @@ public class ContentBlockService : IContentBlockService
         var renderedBlocks = blockToRender
             .Select(contentBlock => RenderBlock(
                 contentBlock, 
-                defaultBlocksDataDictionary[contentBlock.Key],
                 blockWrappersDictionary[WrapperTypes.Default])
             ).ToList();
         
@@ -69,17 +64,21 @@ public class ContentBlockService : IContentBlockService
 
     private static Localization GetLocalization(List<Localization> localizations, string languageId) => localizations.First(l => l.LanguageId.Contains(languageId));
     
-    private static Dictionary<string, string>? FillPayload(Dictionary<string, string>? defaultPayload, Dictionary<string, string>? sourcePayload)
+    private static Dictionary<string, string> FillPayload(Dictionary<string, string>? defaultPayload, Dictionary<string, string>? sourcePayload)
     {
-        if (sourcePayload is null || sourcePayload.Count == 0) return defaultPayload;
-        
+        var result = sourcePayload is null
+            ? new Dictionary<string, string>()
+            : new Dictionary<string, string>(sourcePayload);
+
+        if (defaultPayload is null) return result;
+
         foreach (var (key, value) in defaultPayload)
         {
-            if (!sourcePayload.TryGetValue(key, out var sourceValue) || string.IsNullOrWhiteSpace(sourceValue))
-                sourcePayload[key] = value;
+            if (!result.TryGetValue(key, out var sourceValue) || string.IsNullOrWhiteSpace(sourceValue))
+                result[key] = value;
         }
         
-        return sourcePayload;
+        return result;
         
         //todo добавить информирование о том, какие поля были заполнены из дефолтных
     }
@@ -94,19 +93,7 @@ public class ContentBlockService : IContentBlockService
         block.Html = result.ToString();
     }
 
-    private static void FillDefaultPayload(List<DefaultBlock>? defaultBlocks, Dictionary<string,DefaultBlockData>? defaultBlocksDataDictionary)
-    {
-        var blocks = defaultBlocks?
-            .Select(block =>
-            {
-                if (defaultBlocksDataDictionary?.TryGetValue(block.Key, out var defaultData) == true)
-                    block.Payload = new Dictionary<string, string>(defaultData.Payload);
-                return block;
-            })
-            .ToList();
-    }
-
-    public RenderedBlock RenderBlock(ContentBlock block, DefaultBlockData defaultData, BlockWrapper wrapper)
+    public RenderedBlock RenderBlock(ContentBlock block, /*DefaultBlockData defaultData,*/ BlockWrapper wrapper)
     {
         var isSpecialBlock = block.Key is "header" or "footer" or "banner";
         

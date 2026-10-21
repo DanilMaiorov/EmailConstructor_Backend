@@ -56,7 +56,7 @@ public class ContentBlockServiceTests
         
         var contentData = _mapper.MapToContentData(request);
 
-        var expectedPayload = CreateDefaultBlockDataPayload(key, variant);
+        var expectedPayload = CreateDefaultBlockDataPayload(key, type, variant);
         
         SetupBlockMocks(
             storeId, 
@@ -84,7 +84,7 @@ public class ContentBlockServiceTests
         string type,
         string variant)
     {
-        var requestPayload = CreateDefaultBlockDataPayload(key)
+        var requestPayload = CreateDefaultBlockDataPayload(key, type, variant)
             .ToDictionary(x => x.Key, x => $"custom_{x.Value}");
 
         var expectedPayload = new Dictionary<string, string>(requestPayload);
@@ -98,7 +98,8 @@ public class ContentBlockServiceTests
             (key, type, variant, requestPayload));
 
         var contentData = _mapper.MapToContentData(request);
-        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
+        
+        var defaultPayload = CreateDefaultBlockDataPayload(key, type, variant);
 
         SetupBlockMocks(
             storeId,
@@ -129,7 +130,7 @@ public class ContentBlockServiceTests
             ["url"] = "https://custom.test"
         };
 
-        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
+        var defaultPayload = CreateDefaultBlockDataPayload(key, type, variant);
 
         var expectedPayload = new Dictionary<string, string>(requestPayload);
 
@@ -179,7 +180,7 @@ public class ContentBlockServiceTests
             ["url"] = "https://custom.test",
             ["alt"] = emptyValue
         };
-        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
+        var defaultPayload = CreateDefaultBlockDataPayload(key, type, variant);
 
         var request = CreateRequest(
             storeId,
@@ -197,7 +198,7 @@ public class ContentBlockServiceTests
 
         var block = Assert.Single(result);
         
-        Assert.Equal("https://custom.test", block.Payload!["url"]);
+        Assert.Equal("https://custom.test", block.Payload["url"]);
         Assert.Equal(defaultPayload["alt"], block.Payload["alt"]);
     }
     
@@ -216,7 +217,7 @@ public class ContentBlockServiceTests
             ["alt"] = "Свой alt"
         };
         
-        var defaultPayload = CreateDefaultBlockDataPayload(key, variant);
+        var defaultPayload = CreateDefaultBlockDataPayload(key, type, variant);
 
         var request = CreateRequest(
             storeId,
@@ -255,15 +256,14 @@ public class ContentBlockServiceTests
 
         await Assert.ThrowsAsync<EmailConstructorExceptions.ProductsRequiredException>(
             () => _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None));
-
-        // падаем рано: до базы даже не дошли
+        
         _contentBlockRepository.Verify(
             x => x.GetBlocks(It.IsAny<string>(), It.IsAny<List<BlockData>>()),
             Times.Never);
     }
     
     [Fact]
-    public async Task GetRenderedBlocksAsync_ShouldThrow_WhenProductTemplateHasProducts()
+    public async Task GetRenderedBlocksAsync_ShouldNotThrow_WhenProductTemplateHasProducts()
     {
         var request = CreateRequest(
             "ru", "ru_RU",
@@ -278,7 +278,7 @@ public class ContentBlockServiceTests
         
         SetupBlockMocks(
             "ru", "ru_RU",
-            ("header", "header_default", "default", CreateDefaultBlockDataPayload("header"), "<a></a>"));
+            ("header", "header_default", "default", CreateDefaultBlockDataPayload("header", "header_default", "default"), "<a></a>"));
         
         var result = await _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None);
         
@@ -290,7 +290,7 @@ public class ContentBlockServiceTests
     }
     
     [Fact]
-    public async Task GetRenderedBlocksAsync_ShouldThrow_WhenProductTemplateHasNoProductsAndHasNoCacheKey()
+    public async Task GetRenderedBlocksAsync_ShouldNotThrow_WhenInfoTemplateHasNoCacheKey()
     {
         var request = CreateRequest(
             "ru", "ru_RU",
@@ -303,7 +303,7 @@ public class ContentBlockServiceTests
         
         SetupBlockMocks(
             "ru", "ru_RU",
-            ("header", "header_default", "default", CreateDefaultBlockDataPayload("header"), "<a></a>"));
+            ("header", "header_default", "default", CreateDefaultBlockDataPayload("header", "header_default", "default"), "<a></a>"));
 
         var result = await _sut.GetRenderedBlocksAsync(contentData, CancellationToken.None);
         
@@ -470,7 +470,6 @@ public class ContentBlockServiceTests
         string key,
         string type,
         string variant,
-        Dictionary<string, string>? payload = null,
         string html = "",
         string css = "")
     {
@@ -480,14 +479,14 @@ public class ContentBlockServiceTests
             Key = key,
             Type = type,
             Variant = variant,
-            Payload = payload ?? new Dictionary<string, string>(),
             Localizations =
             [
                 new Localization
                 {
                     LanguageId = languageId,
                     Html = html,
-                    Css = css
+                    Css = css,
+                    Payload = CreateDefaultBlockDataPayload( key, type, variant)
                 }
             ]
         };
@@ -521,20 +520,20 @@ public class ContentBlockServiceTests
             };
         }
 
-        private static Dictionary<string, string> CreateDefaultBlockDataPayload(string key, string variant = "default") => 
-            (key, variant) switch
+        private static Dictionary<string, string> CreateDefaultBlockDataPayload(string key, string type, string variant = "default") => 
+            (key, type, variant) switch
         {
-            ("header", "default") => new Dictionary<string, string>
+            ("header", "header_default", "default") => new Dictionary<string, string>
             {
                 ["url"] = "https://goldapple.test.header.ru"
             },
             
-            ("footer", "with_offer")  => new Dictionary<string, string>
+            ("footer", "marketing", "with_offer")  => new Dictionary<string, string>
             {
                 ["url"] = "https://goldapple.test.footer.ru"
             },
 
-            ("button", "default")  => new Dictionary<string, string>
+            ("button", "button_default", "default")  => new Dictionary<string, string>
             {
                 ["img_desktop"] = "https://email-images.mindbox.ru/708656/4764969/18.jpg",
                 ["img_mobile"] = "https://email-images.mindbox.ru/708656/4764969/23.jpg",
@@ -542,7 +541,7 @@ public class ContentBlockServiceTests
                 ["url"] = "https://goldapple.test.button.ru"
             },
             
-            ("text", "default")  => new Dictionary<string, string>
+            ("text", "text_default", "default")  => new Dictionary<string, string>
             {
                 ["cd_dates"] = "1 января из теста default",
                 ["title"] = "Заголовок из теста default",
@@ -553,7 +552,7 @@ public class ContentBlockServiceTests
                 ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
                 ["alt"] = "Сатып алуға өту из теста default"
             },
-            ("text", "without_cd_dates")  => new Dictionary<string, string>
+            ("text", "text_default", "without_cd_dates")  => new Dictionary<string, string>
             {
                 ["title"] = "Заголовок из теста without_cd_dates",
                 ["font_family"] = "Helvetica, Arial, sans-serif",
@@ -563,20 +562,20 @@ public class ContentBlockServiceTests
                 ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/9ee910a7-511a-43b9-ab4a-2e…",
                 ["alt"] = "Сатып алуға өту из теста without_cd_dates"
             },
-            ("text", "without_button")  => new Dictionary<string, string>
+            ("text", "text_default", "without_button")  => new Dictionary<string, string>
             {
                 ["cd_dates"] = "1 января из теста without_button",
                 ["title"] = "Заголовок из теста without_button",
                 ["font_family"] = "Helvetica, Arial, sans-serif",
                 ["text"] = "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusam… из теста without_button"
             },
-            ("text", "without_cd_dates_and_button")  => new Dictionary<string, string>
+            ("text", "text_default", "without_cd_dates_and_button")  => new Dictionary<string, string>
             {
                 ["title"] = "Заголовок из теста without_cd_dates_and_button",
                 ["font_family"] = "Helvetica, Arial, sans-serif",
                 ["text"] = "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusam… из теста without_cd_dates_and_button"
             },
-            ("banner", "default")  => new Dictionary<string, string>
+            ("banner", "banner_default", "default")  => new Dictionary<string, string>
             {
                 ["img_desktop"] = "https://email-images.mindbox.ru/Goldappleru/18275/416ddb12-30c7-45f4-b…",
                 ["img_mobile"] = "https://email-images.mindbox.ru/Goldappleru/18275/339ba462-3b07-44cd-a…",
@@ -584,7 +583,7 @@ public class ContentBlockServiceTests
                 ["url"] = "https://goldapple.test.banner.ru"
             },
             
-            _ => throw new ArgumentOutOfRangeException(nameof(key), key, null)
+            _ => new Dictionary<string, string>()
         };
 
         private static Block CreateBlock(

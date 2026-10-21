@@ -16,4 +16,9 @@ public class Localization
     /// Мобильные стили элемента.
     /// </summary>
     public string Css { get; set; }
+        
+    /// <summary>
+    /// Payload блока.
+    /// </summary>
+    public Dictionary<string, string> Payload { get; set; }
 }

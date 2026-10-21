@@ -40,11 +40,6 @@ public class DefaultBlock
     public string Variant { get; set; }
     
     /// <summary>
-    /// Payload блока.
-    /// </summary>
-    public Dictionary<string, string> Payload { get; set; }
-    
-    /// <summary>
     /// Верстка блока.
     /// </summary>
     public List<Localization> Localizations { get; set; }
